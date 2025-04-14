@@ -123,8 +123,23 @@
 ;IN TLS second refers to cadr
 (define second cadr)
 
+(define third  caddr)
+
 ;IN TLS extend-table refers to cons
 ( define extend-table cons)
+
+;short program used to add1
+(define (add1 n)
+  (+ n 1))
+; short program used to subtract by 1
+(define( sub1 n)
+  (- n 1))
+
+
+
+            
+
+
 
 
 ;TLS FUNCTIONS
@@ -141,6 +156,8 @@
   ;this should jus return the inputed lists 
   (list names values))
 
+
+
 ( define new-entry build-entry)
 ; we probably need to add somehting that adds the input to it 
 
@@ -156,17 +173,18 @@
 
 
 
+
 ;This checks if two lists have the equal length, should work for both nested and regular lists
 ;I think troger would prefer a bunch of helper functions like (set-f) so if you guys want to alter this to match that feel free to
 (define (check-eq-len list1 list2)
   (if (= (count list1) (count list2))
       #t
-      (begin
-        (display "Error: Lists are not of equal length.")
-        (newline)
-        #f)))
+     eq-list-f))  
 
 
+
+;LOOKUP FUNCTIONs
+;; ============================================================================
 (define (lookup-in-entry name entry entry-f)
   (lookup-in-entry-helper name
                         (first entry)
@@ -201,17 +219,12 @@
                                            (cdr table)
                                            table-f))))))
 
-;The following function prodoucess the correct action for each possible S-expression
-( define (expression-to-action e)
-   ( cond
-      ((atom? e)(atom-to-action e))
-      ( else
-        ( list-to-action e))))
 
-; ( define (atom-to-action e)
-    ;(cond
-     ; ((number? e) *const)
+  
    
+
+
+
 
 
 
@@ -219,6 +232,191 @@
 ;Tests
 ;(lookup-in-entry 'wine '(appetizer entrée beverage) '(beer beer beer))
 ;(lookup-in-entry 'beverage '(appetizer entrée beverage) '(beer beer beer))
+
+
+
+
+;ACTION FUNCTIONS
+;; ============================================================================
+
+
+;Is supposed to tell the action of the atom
+(define (atom-to-action e)
+  (cond
+     ((number? e) *const)
+     ((eq? e #t)  *const)
+     ((eq? e #f)  *const)
+     ((eq? e 'cons) *const)
+     ((eq? e 'car)  *const)
+     ((eq? e 'cdr)  *const)
+     ((eq? e 'null?) *const)
+     ((eq? e 'eq?)   *const)
+     ((eq? e 'atom?) *const)
+     ((eq? e 'zero?) *const)
+     ((eq? e 'add1)  *const)
+     ((eq? e 'sub1)  *const)
+     ((eq? e 'number?) *const)
+     (else *identifier)))
+
+;Defenition of list-to-action
+(define (list-to-action e)
+  (cond
+    ((atom? (car e))
+     (cond
+       ((eq? (car e) 'quote) 
+        *quote)
+       ((eq? (car e) 'lambda)
+        *lambda)
+       ((eq? ( car e)('cond))
+        *cond)
+       (else *application)))
+    (else *application)))
+
+
+;The following function prodoucess the correct action for each possible S-expression
+( define (expression-to-action e)
+   ( cond
+      ((atom? e)(atom-to-action e))
+      ( else
+        ( list-to-action e))))
+
+;Actions to constants
+( define (*const e table)
+   (cond
+     ((number? e) e)
+     ((eq? e #t) #t)
+     ((eq? e #f)#f)
+     (else
+      (build ('primative) e))))
+
+(define (*quote e table)
+  (text-of e))
+
+(define text-of second)
+
+(define (value e)
+  (meaning e ('())))
+
+( define (meaning e table)
+   (lambda ( e table)
+     ((expression-to-action e) e table)))
+
+( define ( *identifier e table)
+   (lookup-in-table e table initial-table))
+
+( define (initial-table name)
+   
+     ( car ('())))
+
+( define (*lambda e table)
+   (build(' non-primitive)
+         (cons table (cdr e))))
+
+( define table-of first)
+( define formals-of second)
+
+; need to write defeniton for third
+(define body-of third)
+
+(define (evcon lines table)
+  (cond
+    ((else? (question-of (car lines)))
+     (meaning (answer-of (car lines)) table))
+    ((meaning (question-of (car lines)) table)
+     (meaning (answer-of (car lines)) table))
+    (else
+     (evcon (cdr lines) table))))
+
+
+(define (else? x)
+  (cond
+    ((atom? x)(eq? x(' else)))
+    (else #f)))
+
+(define question-of first)
+(define answer-of second)
+
+(define (*cond e table)
+  (evcon(cond-lines-of e) table))
+
+(define cond-lines-of cdr)
+
+(define(evlis args table)
+  (cond
+    ((null? args)('()))
+    (else
+     (cons(meaning(car args)table)
+          (evlis(cdr args) table)))))
+
+( define (*application e table)
+   (apply
+    (meaning(function-of e ) table)
+    (evilis(arguments-of e) table)))
+
+(define function-of car)
+(define arguments-of cdr)
+
+( define (primitive? l)
+   (eq?(first l) (' primitive)))
+
+(define (non-primitive l)
+  (eq? (first l)(' non-primitive)))
+
+(define (applyi fun vals)
+  (cond
+    ((primitive? fun)
+     (apply-primitive(second fun) vals))
+    ((non-primitive? fun)
+     (apply-closure
+      (second fun) vals))))
+
+
+(define apply-primitive
+  (lambda (name vals)
+    (cond
+     ((eq? name 'cons)
+      (cons (first vals) (second vals)))
+     ((eq? name 'car)
+      (car (first vals)))
+     ((eq? name 'cdr)
+      (cdr (first vals)))
+     ((eq? name 'null?)
+      (null? (first vals)))
+     ((eq? name 'eq?)
+      (eq? (first vals) (second vals)))
+     ((eq? name 'atom?)
+      (:atom? (first vals)))
+     ((eq? name 'zero?)
+      (zero? (first vals)))
+     ((eq? name 'add1)
+      (add1 (first vals)))
+     ((eq? name 'sub1)
+      (sub1 (first vals)))
+     ((eq? name 'number?)
+      (number? (first vals))))))
+
+(define :atom?
+  (lambda (x)
+    (cond
+     ((atom? x) #t)
+     ((null? x) #f)
+     ((eq? (car x) 'primitive) #t)
+     ((eq? (car x) 'non-primitive) #t)
+     (else #f))))
+
+
+(define (apply-closure closure vals)
+  (meaning (body-of closure)
+           (extend-table
+            (new-entry
+             (formals-of closure)
+             vals)
+            (table-of closure))))
+  
+
+
+   
+
 
 
 ;ERROR FUNCTIONS
@@ -246,8 +444,11 @@
       ( display "Not found in the table")
       (newline)#f))
                
-
-
+(define(eq-list-f)
+   (begin
+        (display "Error: Lists are not of equal length.")
+        (newline)
+        #f))
 
 
 
@@ -266,9 +467,7 @@
                       ;((food is) (number one with us))))
 ;(check-set '( 2 3 4 5 5))
 
-;( count '( 1 3 4 5))
-
-
+;( count '( 1 3 4 )
 
 
 
