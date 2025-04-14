@@ -117,14 +117,22 @@
       0
       (+ 1 (count (cdr lst)))))
 
+;IN TLS first refers to car
+( define first car)
+
+;IN TLS second refers to cadr
+(define second cadr)
+
+;IN TLS extend-table refers to cons
+( define extend-table cons)
 
 
 ;TLS FUNCTIONS
 ;; ============================================================================
 
-
-;;;;;NEEDS WORK( FIXED)
-(define (new-entry-build names values)
+;This is logic
+;;;;;NEEDS WORK( im not entirly sure if this is correct
+(define (build-entry names values)
   ;In TLS it says that only the first list must be a set so we just check the first list
   (check-set names) 
   ;Im thinking for this we use some tree properties with count to check the length(Done) you guys can double check
@@ -133,6 +141,7 @@
   ;this should jus return the inputed lists 
   (list names values))
 
+( define new-entry build-entry)
 ; we probably need to add somehting that adds the input to it 
 
 ;This function will tell us if a list is a set or if its not.
@@ -158,14 +167,15 @@
         #f)))
 
 
-(define (lookup-in-entry name names values)
+(define (lookup-in-entry name entry entry-f)
   (lookup-in-entry-helper name
-                        names
-                        values
+                        (first entry)
+                        (second entry)
+                        entry-f
                         ))
 
 ;This is supposed to check if the name is in the values
-( define (lookup-in-entry-helper name names values)
+( define (lookup-in-entry-helper name names values entry-f)
    (cond
      ((null? names)(entry-f name))
      ((eq?(car names) name)
@@ -175,14 +185,43 @@
        name
        (cdr names)
        (cdr values)
+       entry-f
        ))))
+
+;;;This is for table lookup
+
+( define (lookup-in-table name table table-f)
+   ( cond
+      ((null? table)(table-f name))
+      (else
+       (lookup-in-entry name
+                        (car table)
+                        (lambda(name)
+                          (lookup-in-table name
+                                           (cdr table)
+                                           table-f))))))
+
+;The following function prodoucess the correct action for each possible S-expression
+( define (expression-to-action e)
+   ( cond
+      ((atom? e)(atom-to-action e))
+      ( else
+        ( list-to-action e))))
+
+; ( define (atom-to-action e)
+    ;(cond
+     ; ((number? e) *const)
+   
+
+
+
           
 ;Tests
 ;(lookup-in-entry 'wine '(appetizer entrée beverage) '(beer beer beer))
 ;(lookup-in-entry 'beverage '(appetizer entrée beverage) '(beer beer beer))
 
 
-;INTERPETER FUNCTIONS
+;ERROR FUNCTIONS
 ;; ============================================================================
 
 ;this is a helper function that displays if an error is found, in this case it is used to tell if the inputed list
@@ -199,6 +238,15 @@
      (display name)
      (display "not in values.")
       (newline)#f))
+
+( define( table-f name)
+   ( begin
+      (display "Error:")
+      (display name)
+      ( display "Not found in the table")
+      (newline)#f))
+               
+
 
 
 
