@@ -92,10 +92,37 @@
 ; This is used to build the lists, ensuring the specifications of a "hashmap" where each list has a key value pair
 ; and the lenght of both of the lists is equal
 
-(define (new-entry build)
-  (check-set (car build)) 
-  ;Im thinking for this we use some tree properties with count to check the length
-  (check-eq-len build))
+
+;BASIC HELPER FUNCTIONS
+;; ============================================================================
+
+; This is the basic atom function which will check when an element is an atom and saves us from redundent code
+( define ( atom? x)
+     (and (not (pair? x)) (not (null? x))))
+
+;This is a simple helper function that can be callled that counts the number of lists
+(define (count lst)
+  (if (null? lst)
+      0
+      (+ 1 (count (cdr lst)))))
+
+
+
+;TLS FUNCTIONS
+;; ============================================================================
+
+
+;;;;;NEEDS WORK( FIXED)
+(define (new-entry names values)
+  ;In TLS it says that only the first list must be a set so we just check the first list
+  (check-set names) 
+  ;Im thinking for this we use some tree properties with count to check the length(Done) you guys can double check
+  ;This should for both nested and regular lists
+  (check-eq-len names values)
+  ;this should jus return the inputed lists 
+  (list names values))
+
+; we probably need to add somehting that adds the input to it 
 
 ;This function will tell us if a list is a set or if its not.
 (define (check-set lst )
@@ -106,6 +133,26 @@
      (set-f))
     (else (cons (car lst)
                 (check-set (cdr lst))))))
+
+
+
+;This checks if two lists have the equal length, should work for both nested and regular lists
+(define (check-eq-len list1 list2)
+  (if (= (count list1) (count list2))
+      #t
+      (begin
+        (display "Error: Lists are not of equal length.")
+        (newline)
+        #f)))
+
+
+
+
+
+
+;INTERPETER FUNCTIONS
+;; ============================================================================
+
 ;this is a helper function that displays if an error is found, in this case it is used to tell if the inputed list
 ; is a set or not
 (define (set-f)
@@ -113,20 +160,13 @@
     (display "Error: Not a set,duplicate elements found.")
     (newline)))
 
-(define (check-eq-len nested-lst)
-  (let ((list1 (car nested-lst))
-        (list2 (cadr nested-lst)))
-    (if (= (count list1) (count list2))
-        #t
-        (begin
-          (display "Error: Lists are not of equal length.")
-          (newline)
-          #f))))
-;This is a simple helper function that can be callled that counts the number of lists
-(define (count lst)
-  (if (null? lst)
-      0
-      (+ 1 (count (cdr lst)))))
+
+
+
+
+
+
+
   
 
 ;; ============================================================================
@@ -134,13 +174,14 @@
 ;Some small tests ( add more as more is added on and expand) Not Entirley correct as of rn but fix to match with book 
 
 ;
-(new-entry '((beverage dessert)
-                      ((food is) (number one with us))))
+;(new-entry '((beverage dessert)
+                      ;((food is) (number one with us))))
 
- (new-entry '((beverage dessert yo)
-                      ((food is) (number one with us))))
+ ;(new-entry '((beverage dessert yo)
+                      ;((food is) (number one with us))))
+;(check-set '( 2 3 4 5 5))
 
-
+;( count '( 1 3 4 5))
 
 
 
