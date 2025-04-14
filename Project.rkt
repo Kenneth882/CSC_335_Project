@@ -93,6 +93,17 @@
 ; and the lenght of both of the lists is equal
 
 
+
+;COMMENTS FOR US: Put any ideas or what you plan to work on/improve or if stuck on something.
+;; ============================================================================
+
+
+
+
+
+
+
+
 ;BASIC HELPER FUNCTIONS
 ;; ============================================================================
 
@@ -113,7 +124,7 @@
 
 
 ;;;;;NEEDS WORK( FIXED)
-(define (new-entry names values)
+(define (new-entry-build names values)
   ;In TLS it says that only the first list must be a set so we just check the first list
   (check-set names) 
   ;Im thinking for this we use some tree properties with count to check the length(Done) you guys can double check
@@ -137,6 +148,7 @@
 
 
 ;This checks if two lists have the equal length, should work for both nested and regular lists
+;I think troger would prefer a bunch of helper functions like (set-f) so if you guys want to alter this to match that feel free to
 (define (check-eq-len list1 list2)
   (if (= (count list1) (count list2))
       #t
@@ -146,8 +158,28 @@
         #f)))
 
 
+(define (lookup-in-entry name names values)
+  (lookup-in-entry-helper name
+                        names
+                        values
+                        ))
 
-
+;This is supposed to check if the name is in the values
+( define (lookup-in-entry-helper name names values)
+   (cond
+     ((null? names)(entry-f name))
+     ((eq?(car names) name)
+      (car values))
+     (else
+      (lookup-in-entry-helper
+       name
+       (cdr names)
+       (cdr values)
+       ))))
+          
+;Tests
+;(lookup-in-entry 'wine '(appetizer entrée beverage) '(beer beer beer))
+;(lookup-in-entry 'beverage '(appetizer entrée beverage) '(beer beer beer))
 
 
 ;INTERPETER FUNCTIONS
@@ -158,10 +190,15 @@
 (define (set-f)
   (begin
     (display "Error: Not a set,duplicate elements found.")
-    (newline)))
+    (newline)
+    #f))
 
-
-
+( define (entry-f name)
+   (begin
+     (display "Error:")
+     (display name)
+     (display "not in values.")
+      (newline)#f))
 
 
 
