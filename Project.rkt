@@ -99,7 +99,7 @@
 ; So 1.1 of the project is telling us to make the functions in chapter 10 of the book ourselves, in R5RS scheme. The functions that they have
 ; are
 ; 1) lookup-in-entry (this takes two arguments, name and entry)
-; 2) lookup-in-entry-help (this is the helper function for #1. This is used when name is not found in the first list of an entry)
+; 2) lookup-in-entry-helper (this is the helper function for #1. This is used when name is not found in the first list of an entry)
 ; 3) extend-table (this is like cons)
 ; 4) lookup-in-table (takes three arguments, name, table, and table-f)
 ; 5) expression-to-action (this produces the correct function for each possible S-expression. action == function)
@@ -171,7 +171,9 @@
 
 
 ;; ===========================================================================
-; First and second function: lookup-in-entry and lookup-in-entry-helper
+; This is the lookup-in-entry function. Accompanied with it is the lookup-in-entry-helper.
+;; ===========================================================================
+
 
 ;pre/specs: takes three arguments, name (what we are looking for), entry (list of names and list of values),
 ;and entry-f, an error function if name not found.
@@ -181,7 +183,7 @@
                         (second entry)
                         entry-f
                         ))
-;post: returns the value associated with name if it exists in entry. If it does not exist, calls the entry-f. 
+;post: returns the value associated with name if it exists in entry. If it does not exist, calls the entry-f function.
 
 (define (lookup-in-entry-helper name names values entry-f)
    (cond
@@ -200,6 +202,37 @@
 ; (lookup-in-entry 'x entry (lambda (name) 'not-found-in-entry)) ;returns 1
 ; (lookup-in-entry 'a entry (lambda (name) 'not-found-in-entry)) ;returns not-found-in-entry
 ; (lookup-in-entry 'entree '((appetizer entree beverage) (ar luka lebron)) (lambda (name) 'not-found)) ;returns luka
+
+
+
+
+
+;; ===========================================================================
+; This is the lookup-in-table function. 
+;; ===========================================================================
+;pre/specs: this takes three arguments, name (what we are looking for), table (it is a list of entries),
+; and table-f (an error function if name is not found)
+(define (lookup-in-table name table table-f)
+   (cond
+     ((null? table)(table-f name))
+     (else
+      (lookup-in-entry name
+                       (car table)
+                       (lambda (name)
+                         (lookup-in-table name
+                                          (cdr table)
+                                           table-f))))))
+;post: returns the value associated with name if it is found in table. if it does not exist, calls the table-f function.
+
+;Testing the function
+; (define table '(((entree dessert)
+;                (spaghetti spumoni))
+;               ((appetizer entree beverage)
+;                (food tastes good))))
+; (lookup-in-table 'entree table (lambda (name) 'not-found)) ;returns spaghetti
+; (lookup-in-table 'dessert table (lambda (name) 'not-found)) ;returns spumoni
+; (lookup-in-table 'appetizer table (lambda (name) 'not-found)) ;returns food
+; (lookup-in-table 'snacks table (lambda (name) 'not-found)) ;returns not-found
 
 
 
@@ -248,21 +281,6 @@
      eq-list-f))  
 
 
-
-;LOOKUP FUNCTIONs
-;; ============================================================================ 
-;;;This is for table lookup
-
-( define (lookup-in-table name table table-f)
-   ( cond
-      ((null? table)(table-f name))
-      (else
-       (lookup-in-entry name
-                        (car table)
-                        (lambda(name)
-                          (lookup-in-table name
-                                           (cdr table)
-                                           table-f))))))
 
 
   
