@@ -119,7 +119,8 @@
 
 
 
-; BASIC HELPER FUNCTIONS
+; BASIC HELPER FUNCTIONS. These are basic functions such as atom?, add1, etc.
+; Or they are functions that have been translated to R5RS Scheme.
 ;; ============================================================================
 
 ; This is the atom function which will check when an element is an atom and saves us from
@@ -162,7 +163,43 @@
 
 
 ; There are certain functions that we do not need to make as they are already in Scheme. For example,
-; append, member?, and pair?. 
+; append, member?, and pair?.
+
+
+
+
+
+
+;; ===========================================================================
+; First and second function: lookup-in-entry and lookup-in-entry-helper
+
+;pre/specs: takes three arguments, name (what we are looking for), entry (list of names and list of values),
+;and entry-f, an error function if name not found.
+(define (lookup-in-entry name entry entry-f)
+  (lookup-in-entry-helper name
+                        (first entry)
+                        (second entry)
+                        entry-f
+                        ))
+;post: returns the value associated with name if it exists in entry. If it does not exist, calls the entry-f. 
+
+(define (lookup-in-entry-helper name names values entry-f)
+   (cond
+     ((null? names)(entry-f name))
+     ((eq? (car names) name) (car values))
+     (else
+      (lookup-in-entry-helper
+       name
+       (cdr names)
+       (cdr values)
+       entry-f
+       ))))
+
+;Testing the function
+; (define entry '((x y z) (1 2 3)))
+; (lookup-in-entry 'x entry (lambda (name) 'not-found-in-entry)) ;returns 1
+; (lookup-in-entry 'a entry (lambda (name) 'not-found-in-entry)) ;returns not-found-in-entry
+; (lookup-in-entry 'entree '((appetizer entree beverage) (ar luka lebron)) (lambda (name) 'not-found)) ;returns luka
 
 
 
@@ -213,28 +250,7 @@
 
 
 ;LOOKUP FUNCTIONs
-;; ============================================================================
-(define (lookup-in-entry name entry entry-f)
-  (lookup-in-entry-helper name
-                        (first entry)
-                        (second entry)
-                        entry-f
-                        ))
-
-;This is supposed to check if the name is in the values
-( define (lookup-in-entry-helper name names values entry-f)
-   (cond
-     ((null? names)(entry-f name))
-     ((eq?(car names) name)
-      (car values))
-     (else
-      (lookup-in-entry-helper
-       name
-       (cdr names)
-       (cdr values)
-       entry-f
-       ))))
-
+;; ============================================================================ 
 ;;;This is for table lookup
 
 ( define (lookup-in-table name table table-f)
@@ -258,9 +274,7 @@
 
 
           
-;Tests
-;(lookup-in-entry 'wine '(appetizer entrée beverage) '(beer beer beer))
-;(lookup-in-entry 'beverage '(appetizer entrée beverage) '(beer beer beer))
+
 
 
 
