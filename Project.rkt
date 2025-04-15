@@ -1,7 +1,6 @@
 ;Members: Alexis Juarez, Hamim Choudhury, Kenneth Romero
-;4/9/25
 ;TLS Project
-;Professor Troeger. 
+;Professor Troeger
 
 
 
@@ -90,12 +89,29 @@
 
 
 ; This is used to build the lists, ensuring the specifications of a "hashmap" where each list has a key value pair
-; and the lenght of both of the lists is equal
+; and the length of both of the lists is equal
 
 
 
 ;COMMENTS FOR US: Put any ideas or what you plan to work on/improve or if stuck on something.
 ;; ============================================================================
+; 4/14/25 - Hamim (Comments Below)
+; So 1.1 of the project is telling us to make the functions in chapter 10 of the book ourselves, in R5RS scheme. The functions that they have
+; are
+; 1) lookup-in-entry (this takes two arguments, name and entry)
+; 2) lookup-in-entry-help (this is the helper function for #1. This is used when name is not found in the first list of an entry)
+; 3) extend-table (this is like cons)
+; 4) lookup-in-table (takes three arguments, name, table, and table-f)
+; 5) expression-to-action (this produces the correct function for each possible S-expression. action == function)
+; 6) atom-to-action
+; 7) list-to-action
+; 8-16) value, meaning, *const, *quote, *identifier, *lambda, *application, *evcon, *else
+; 17-22) primitive?, non-primitive?, apply, apply-primitive, atom?, apply-closure
+
+; Now how do we approach this? In chapter 10 of the book we have some functions written completely and we just need to convert that to R5RS,
+; and some do not. Kenneth already began to create the basic helper functions and write the functions in Scheme (4/14/25). We started off by
+; first creating the basic helper functions, the ones that are in the chapter and commonly used in TLS and then we went through the list one
+; by one and made the functions. 
 
 
 
@@ -103,37 +119,50 @@
 
 
 
-
-;BASIC HELPER FUNCTIONS
+; BASIC HELPER FUNCTIONS
 ;; ============================================================================
 
-; This is the basic atom function which will check when an element is an atom and saves us from redundent code
-( define ( atom? x)
-     (and (not (pair? x)) (not (null? x))))
+; This is the atom function which will check when an element is an atom and saves us from
+; using redundant code
+(define (atom? x)
+  (and (not (pair? x)) (not (null? x))))
 
-;This is a simple helper function that can be callled that counts the number of lists
-(define (count lst)
+
+;This is a simple helper function that can be called that counts the number of elements in a list
+(define (count-elements lst)
   (if (null? lst)
       0
       (+ 1 (count (cdr lst)))))
 
+
+;A function used to add by 1
+(define (add1 n)
+  (+ n 1))
+
+
+;A function used to subtract by 1
+(define (sub1 n)
+  (- n 1))
+
+
 ;IN TLS first refers to car
-( define first car)
+(define first car)
+
 
 ;IN TLS second refers to cadr
 (define second cadr)
 
-(define third  caddr)
+
+;IN TLS third refers to caddr
+(define third caddr)
+
 
 ;IN TLS extend-table refers to cons
-( define extend-table cons)
+(define extend-table cons)
 
-;short program used to add1
-(define (add1 n)
-  (+ n 1))
-; short program used to subtract by 1
-(define( sub1 n)
-  (- n 1))
+
+; There are certain functions that we do not need to make as they are already in Scheme. For example,
+; append, member?, and pair?. 
 
 
 
@@ -142,7 +171,7 @@
 
 
 
-;TLS FUNCTIONS
+; TLS FUNCTIONS
 ;; ============================================================================
 
 ;This is logic
@@ -158,7 +187,7 @@
 
 
 
-( define new-entry build-entry)
+(define new-entry build-entry)
 ; we probably need to add somehting that adds the input to it 
 
 ;This function will tell us if a list is a set or if its not.
