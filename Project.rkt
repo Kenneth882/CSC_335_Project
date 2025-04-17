@@ -113,6 +113,15 @@
 ; by one and made the functions. 
 
 
+; 4/16/25 - Hamim (Comments Below)
+; Today was just completing the build function in TLS, what this function does is that it returns an entry if it satisfies two conditions. The
+; first condition being that the names list does not contain duplicates, aka is a set. And the second condition being that the values list and
+; names list are of equal length. Both of the conditions have their own function, check-set and check-equal-len-list. Kenneth had already begun
+; a basic outline of it, I just added onto it and finalized it. Alexis and me were working on the pre and post conditions as well.
+
+
+
+
 
 
 
