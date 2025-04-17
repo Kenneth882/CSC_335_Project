@@ -355,11 +355,22 @@
 
 
 
-;ACTION FUNCTIONS
+;; ============================================================================
+; Action Functions
+; In chapter 10 of TLS, we once again meet the use of value. And value is the function that returns
+; the natural value of expressions. After that, we then get introduced to the different action functions
+; There are different types: *const, *quote, *identifier, *lambda, *cond, and *application. And to represent
+; we use action functions. We have atom-to-action, expression-to-action, and list-to-action. 
 ;; ============================================================================
 
 
-;Is supposed to tell the action of the atom
+
+
+
+;; ===========================================================================
+; This is the atom-to-action function. This was already given to us in TLS chapter 10. The purpose of this is
+; to decide how to evaluate an expression. And returns the correct "action". 
+;; ===========================================================================
 (define (atom-to-action e)
   (cond
      ((number? e) *const)
@@ -377,27 +388,55 @@
      ((eq? e 'number?) *const)
      (else *identifier)))
 
-;Defenition of list-to-action
+
+
+
+
+;; ===========================================================================
+; This is the list-to-action function. This was also given in TLS. The purpose of this is to handle expressions
+; that are not atoms, hence why we have quote, lambda, and cond as a comparison for our eq? and return it.
+; Also deals with *application. 
+;; ===========================================================================
 (define (list-to-action e)
   (cond
     ((atom? (car e))
      (cond
-       ((eq? (car e) 'quote) 
-        *quote)
-       ((eq? (car e) 'lambda)
-        *lambda)
-       ((eq? ( car e)('cond))
-        *cond)
+       ((eq? (car e) 'quote) *quote)
+       ((eq? (car e) 'lambda) *lambda)
+       ((eq? ( car e)('cond)) *cond)
        (else *application)))
     (else *application)))
 
 
-;The following function prodoucess the correct action for each possible S-expression
-( define (expression-to-action e)
-   ( cond
-      ((atom? e)(atom-to-action e))
-      ( else
-        ( list-to-action e))))
+
+
+;; ===========================================================================
+; This is the expression-to-action function. This was also given in TLS. The purpose of this can be thought of
+; as the main function, it calls both of the two previous functions given what we have inputted. And then the other
+; two can be considered helper functions that do all of the work. 
+;; ===========================================================================
+(define (expression-to-action e)
+  (cond
+    ((atom? e)(atom-to-action e))
+    (else
+     (list-to-action e)))) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ;Actions to constants
 ( define (*const e table)
