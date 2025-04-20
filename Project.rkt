@@ -392,8 +392,8 @@
 
 
 (define (meaning e table)
-   (lambda (e table)
-     ((expression-to-action e) e table)))
+  (lambda (e table)
+    ((expression-to-action e) e table)))
 
 
 ;Action for identifier
@@ -405,6 +405,7 @@
   (car ('())))
 
 
+;Action for lambda
 (define (*lambda e table)
   (build('non-primitive)
         (cons table (cdr e))))
@@ -412,8 +413,6 @@
 
 (define table-of first)
 (define formals-of second)
-
-
 ; need to write defeniton for third
 (define body-of third)
 
@@ -438,6 +437,7 @@
 (define answer-of second)
 
 
+;Action for cond
 (define (*cond e table)
   (evcon(cond-lines-of e) table))
 
@@ -445,14 +445,15 @@
 (define cond-lines-of cdr)
 
 
-(define(evlis args table)
+(define (evlis args table)
   (cond
     ((null? args)('()))
     (else
-     (cons(meaning(car args)table)
-          (evlis(cdr args) table)))))
+     (cons (meaning (car args) table)
+           (evlis (cdr args) table)))))
 
 
+;Action for application
 (define (*application e table)
    (apply
     (meaning(function-of e ) table)
@@ -600,52 +601,44 @@
 
 
 
-;ERROR FUNCTIONS
+;; ============================================================================
+; Error Functions
+; In chapter 10 of TLS, we get introduced to parameters within our function that ends in -f. For example, we
+; have set-f, entry-f, table-f, etc, etc. These are known as error functions. Because we don't want to actually
+; write an else clause and then an error message.
 ;; ============================================================================
 
-;this is a helper function that displays if an error is found, in this case it is used to tell if the inputed list
-; is a set or not
+;This is an error function set-f, which returns an error message if the input is not a set.
 (define (set-f)
   (begin
-    (display "Error: Not a set,duplicate elements found.")
+    (display "Error: Not a set, duplicate elements found.")
     (newline)
     #f))
 
-( define (entry-f name)
+
+;This is an error function entry-f that returns an error message if the name we are looking for/searching is
+;not in the values list.
+(define (entry-f name)
    (begin
      (display "Error:")
      (display name)
      (display "not in values.")
       (newline)#f))
 
-( define( table-f name)
-   ( begin
+
+;This is an error function table-f which returns an error message if the name we are looking for/searching is
+;not in the table. 
+(define(table-f name)
+   (begin
       (display "Error:")
       (display name)
-      ( display "Not found in the table")
+      (display "Not found in the table")
       (newline)#f))
-               
+
+
+;This is an error function eq-list-f which returns an error message if the two lists, are not of equal length.
 (define(eq-list-f)
    (begin
         (display "Error: Lists are not of equal length.")
         (newline)
         #f))
-
-
-
-
-  
-
-;; ============================================================================
-
-;Some small tests ( add more as more is added on and expand) Not Entirley correct as of rn but fix to match with book 
-
-;
-;(new-entry '((beverage dessert)
-                      ;((food is) (number one with us))))
-
- ;(new-entry '((beverage dessert yo)
-                      ;((food is) (number one with us))))
-;(check-set '( 2 3 4 5 5))
-
-;( count '( 1 3 4 )
