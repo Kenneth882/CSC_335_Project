@@ -120,6 +120,12 @@
 ; a basic outline of it, I just added onto it and finalized it. Alexis and me were working on the pre and post conditions as well.
 
 
+; 4/17/25 - Hamim (Comments Below)
+
+
+
+; 4/19/25 - Hamim (Comments Below)
+
 
 
 
@@ -141,7 +147,7 @@
 (define (count-elements lst)
   (if (null? lst)
       0
-      (+ 1 (count (cdr lst)))))
+      (+ 1 (count-elements (cdr lst)))))
 
 
 ;A function used to add by 1
@@ -363,11 +369,11 @@
 
 
 (define (primitive? l)
-   (eq?(first l) ('primitive)))
+  (eq? (first l) 'primitive))
 
 
-(define (non-primitive l)
-  (eq? (first l)(' non-primitive)))
+(define (non-primitive? l)
+  (eq? (first l) 'non-primitive))
 
 
 ;Action for constants
@@ -388,12 +394,11 @@
 
 
 (define (value e)
-  (meaning e ('())))
+  (meaning e '()))
 
 
 (define (meaning e table)
-  (lambda (e table)
-    ((expression-to-action e) e table)))
+  ((expression-to-action e) e table))
 
 
 ;Action for identifier
@@ -402,11 +407,11 @@
 
 
 (define (initial-table name)
-  (car ('())))
+  (car '()))
 
 
 ;Action for lambda
-(define (*lambda e table)
+(define (*lambda e table) 
   (build('non-primitive)
         (cons table (cdr e))))
 
@@ -429,7 +434,7 @@
 
 (define (else? x)
   (cond
-    ((atom? x)(eq? x(' else)))
+    ((atom? x) (eq? x 'else))
     (else #f)))
 
 
@@ -476,26 +481,26 @@
 (define apply-primitive
   (lambda (name vals)
     (cond
-     ((eq? name 'cons)
-      (cons (first vals) (second vals)))
-     ((eq? name 'car)
-      (car (first vals)))
-     ((eq? name 'cdr)
-      (cdr (first vals)))
-     ((eq? name 'null?)
-      (null? (first vals)))
-     ((eq? name 'eq?)
-      (eq? (first vals) (second vals)))
-     ((eq? name 'atom?)
-      (:atom? (first vals)))
-     ((eq? name 'zero?)
-      (zero? (first vals)))
-     ((eq? name 'add1)
-      (add1 (first vals)))
-     ((eq? name 'sub1)
-      (sub1 (first vals)))
-     ((eq? name 'number?)
-      (number? (first vals))))))
+      ((eq? name 'cons)
+       (cons (first vals) (second vals)))
+      ((eq? name 'car)
+       (car (first vals)))
+      ((eq? name 'cdr)
+       (cdr (first vals)))
+      ((eq? name 'null?)
+       (null? (first vals)))
+      ((eq? name 'eq?)
+       (eq? (first vals) (second vals)))
+      ((eq? name 'atom?)
+       (atom? (first vals)))
+      ((eq? name 'zero?)
+       (zero? (first vals)))
+      ((eq? name 'add1)
+       (add1 (first vals)))
+      ((eq? name 'sub1)
+       (sub1 (first vals)))
+      ((eq? name 'number?)
+       (number? (first vals))))))
 
 
 (define :atom?
@@ -642,3 +647,16 @@
         (display "Error: Lists are not of equal length.")
         (newline)
         #f))
+
+
+(value '5)  ; Should return 5
+(value '#t) ; Should return #t
+(value '(quote hello)) ; Should return hello
+
+(value '(cond (#t 'hello))) ; Should return hello
+(value '(cond (#f 'wrong) (else 'correct))) ; Should return correct
+
+
+;THESE TWO DO NOT WORK. FIX THIS LATER
+; (value '((lambda (x) x) 5)) ; Should return 5
+; (value '((lambda (x y) (cons x y)) 'a 'b)) ; Should return (a . b)
