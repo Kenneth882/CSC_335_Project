@@ -236,6 +236,7 @@
 ;; ===========================================================================
 ; This is the lookup-in-table function. 
 ;; ===========================================================================
+
 ;pre/specs: this takes three arguments, name (what we are looking for), table (it is a list of entries),
 ; and table-f (an error function if name is not found)
 (define (lookup-in-table name table table-f)
@@ -249,6 +250,7 @@
                                           (cdr table)
                                            table-f))))))
 ;post: returns the value associated with name if it is found in table. if it does not exist, calls the table-f function.
+
 
 ;Testing the function
 ; (define table '(((entree dessert)
@@ -282,6 +284,7 @@
 ; This is the check-set function. It checks whether or not the list has duplicates.
 ; Sets cannot have duplicates.
 ;; ===========================================================================
+
 ;pre: list1 is a list
 (define (check-set list1)
   (cond
@@ -290,6 +293,7 @@
     (else
      (check-set (cdr list1)))))
 ;post: returns #t if list1 is a set and #f if it is not a set
+
 
 ;Testing the function
 ; (check-set '())           ;returns #t
@@ -303,6 +307,7 @@
 ;; ===========================================================================
 ; This is the check-equal-len-list function. It checks whether two lists are of equal length. 
 ;; ===========================================================================
+
 ;pre: list1 and list2 are lists
 (define (check-equal-len-list list1 list2)
   (cond
