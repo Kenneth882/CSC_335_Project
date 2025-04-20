@@ -107,11 +107,19 @@
 ; 7) list-to-action
 ; 8-16) value, meaning, *const, *quote, *identifier, *lambda, *application, *evcon, *else
 ; 17-22) primitive?, non-primitive?, apply, apply-primitive, atom?, apply-closure
-
 ; Now how do we approach this? In chapter 10 of the book we have some functions written completely and we just need to convert that to R5RS,
 ; and some do not. Kenneth already began to create the basic helper functions and write the functions in Scheme (4/14/25). We started off by
 ; first creating the basic helper functions, the ones that are in the chapter and commonly used in TLS and then we went through the list one
 ; by one and made the functions. 
+
+
+; 4/16/25 - Hamim (Comments Below)
+; Today was just completing the build function in TLS, what this function does is that it returns an entry if it satisfies two conditions. The
+; first condition being that the names list does not contain duplicates, aka is a set. And the second condition being that the values list and
+; names list are of equal length. Both of the conditions have their own function, check-set and check-equal-len-list. Kenneth had already begun
+; a basic outline of it, I just added onto it and finalized it. Alexis and me were working on the pre and post conditions as well.
+
+
 
 
 
@@ -146,19 +154,19 @@
   (- n 1))
 
 
-;IN TLS first refers to car
+;In TLS first refers to car
 (define first car)
 
 
-;IN TLS second refers to cadr
+;In TLS second refers to cadr
 (define second cadr)
 
 
-;IN TLS third refers to caddr
+;In TLS third refers to caddr
 (define third caddr)
 
 
-;IN TLS extend-table refers to cons
+;In TLS extend-table refers to cons
 (define extend-table cons)
 
 
@@ -174,6 +182,17 @@
 ; This is the lookup-in-entry function. Accompanied with it is the lookup-in-entry-helper.
 ;; ===========================================================================
 
+;Design Idea:
+;when looking up the entry there will be 3 possible cases, one where the name is found in entry, it will then return the associated value with the name.
+;If it does not exist it will return the associated value once the entry-f is called.
+;The third case will be if no name is given aka an empty char/string, then we call the entry-f function.
+; ___________________
+;[_______ayp|nyp_____]------>(first entry)= ayp----->(second entry) =nyp -------->(if ayp and nyp = name then we return entry-f)
+;                                                                                   (needs helper)
+
+;ayp: the first tables (ill go more in detail later i gotta push)
+;nyp: the remaining tables
+
 
 ;pre/specs: takes three arguments, name (what we are looking for), entry (list of names and list of values),
 ;and entry-f, an error function if name not found.
@@ -184,17 +203,6 @@
                         entry-f
                         ))
 ;post: returns the value associated with name if it exists in entry. If it does not exist, calls the entry-f function.
-
-;design idea:
-;when looking up the entry there will be 3 possible cases, one where the name is found in entry, it will then return the associated value with the name.
-;If it does not exist it will return the associated value once the entry-f is called.
-;The third case will be if no name is given aka an empty char/string, then we call the entry-f function.
-; ___________________
-;[_______ayp|nyp_____]------>(first entry)= ayp----->(second entry) =nyp -------->(if ayp and nyp = name then we return entry-f)
-;                                                                                   (needs helper)
-
-;ayp: the first tables (ill go more in detail later i gotta push)
-;nyp: the remaining tables
 
 
 (define (lookup-in-entry-helper name names values entry-f)
@@ -209,11 +217,11 @@
        entry-f
        ))))
 
-;Testing the function
- (define entry '((x y z) (1 2 3)))
- (lookup-in-entry 'x entry (lambda (name) 'not-found-in-entry)) ;returns 1
- (lookup-in-entry 'a entry (lambda (name) 'not-found-in-entry)) ;returns not-found-in-entry
- (lookup-in-entry 'entree '((appetizer entree beverage) (ar luka lebron)) (lambda (name) 'not-found)) ;returns luka
+; Testing the function
+; (define entry '((x y z) (1 2 3)))
+; (lookup-in-entry 'x entry (lambda (name) 'not-found-in-entry)) ;returns 1
+; (lookup-in-entry 'a entry (lambda (name) 'not-found-in-entry)) ;returns not-found-in-entry
+; (lookup-in-entry 'entree '((appetizer entree beverage) (ar luka lebron)) (lambda (name) 'not-found)) ;returns luka
 
 
 
@@ -253,52 +261,83 @@
 
 
 
+;; ============================================================================
 ; TLS FUNCTIONS
+; In TLS, it asks a crucial question, "How can we build an entry from a set of names and a list of values?"
+; It then proceeds to tell us that we should try and build our examples with the function of
+; (define new-entry build). And this is ultimately saying new-entry = build. So we need to make a build function.
 ;; ============================================================================
 
-;This is logic
-;;;;;NEEDS WORK( im not entirly sure if this is correct
-(define (build-entry names values)
-  ;In TLS it says that only the first list must be a set so we just check the first list
-  (check-set names) 
-  ;Im thinking for this we use some tree properties with count to check the length(Done) you guys can double check
-  ;This should for both nested and regular lists
-  (check-eq-len names values)
-  ;this should jus return the inputed lists 
-  (list names values))
 
 
 
-(define new-entry build-entry)
-; we probably need to add somehting that adds the input to it 
 
-;This function will tell us if a list is a set or if its not.
-(define (check-set lst )
+;; ===========================================================================
+; This is the check-set function. It checks whether or not the list has duplicates.
+; Sets cannot have duplicates.
+;; ===========================================================================
+;pre: list1 is a list
+(define (check-set list1)
   (cond
-    ((null? lst)
-     '())
-    ((member (car lst) (cdr lst))
-     (set-f))
-    (else (cons (car lst)
-                (check-set (cdr lst))))))
+    ((null? list1) #t)
+    ((member (car list1) (cdr list1)) #f)
+    (else
+     (check-set (cdr list1)))))
+;post: returns #t if list1 is a set and #f if it is not a set
+
+;Testing the function
+; (check-set '())           ;returns #t
+; (check-set '(1 2 3 4))    ;returns #t
+; (check-set '(1 2 2 3))    ;returns #f
 
 
 
 
-;This checks if two lists have the equal length, should work for both nested and regular lists
-;I think troger would prefer a bunch of helper functions like (set-f) so if you guys want to alter this to match that feel free to
-(define (check-eq-len list1 list2)
-  (if (= (count list1) (count list2))
-      #t
-     eq-list-f))  
+
+;; ===========================================================================
+; This is the check-equal-len-list function. It checks whether two lists are of equal length. 
+;; ===========================================================================
+;pre: list1 and list2 are lists
+(define (check-equal-len-list list1 list2)
+  (cond
+    ((and (null? list1) (null? list2)) #t)
+    ((or (null? list1) (null? list2)) #f)
+    (else
+     (check-equal-len-list (cdr list1) (cdr list2)))))
+;post: returns #t or #f based on if the lists are of equal length or not
+
+
+;Testing the function
+; (check-equal-len-list '(x y z) '(10 20 30))  ;returns #t
+; (check-equal-len-list '() '(1 2 3))          ;returns #f
+; (check-equal-len-list '(x y z) '())          ;returns #f
+; (check-equal-len-list '() '())               ;returns #t
+; (check-equal-len-list '(a b c d) '(1 2 3))   ;returns #f
 
 
 
 
-  
-   
+
+;; ===========================================================================
+; This is the build function. It creates entry and validates that the names list has no dupes and
+; the names list and values list are the same length. And then it returns the entry.
+;; ===========================================================================
+
+;pre: this takes two? three? arguments. names, values, and build-f (an error function). FIX THIS PRE CONDITION!
+(define (build names values build-f)
+  (cond
+    ((not (check-set names)) (build-f "Names error. Names cannot have duplicates"))
+    ((not (check-equal-len-list names values)) (build-f "Value error. Names and value must be equal length"))
+    (else
+     (list names values))))
+;post: returns an entry if names has no duplicates and names and values are of equal length. otherwise, returns
+;the appropriate error message. 
 
 
+;Testing the function
+; (build '(x y z) '(1 2 3) (lambda (message) message))     ;returns ((x y z) (1 2 3))
+; (build '(x y z) '(1 2 3 4) (lambda (message) message))   ;returns value error.
+; (build '(x x y z) '(1 2 3 4) (lambda (message) message)) ;returns name error
 
 
 
@@ -309,87 +348,75 @@
 
 
 
-;ACTION FUNCTIONS
+;; ============================================================================
+; Action Functions
+; In chapter 10 of TLS, we once again meet the use of value. And value is the function that returns
+; the natural value of expressions. After that, we then get introduced to the different action functions
+; There are different types: *const, *quote, *identifier, *lambda, *cond, and *application. And to represent
+; we use action functions. We have atom-to-action, expression-to-action, and list-to-action. 
 ;; ============================================================================
 
-
-;Is supposed to tell the action of the atom
-(define (atom-to-action e)
-  (cond
-     ((number? e) *const)
-     ((eq? e #t)  *const)
-     ((eq? e #f)  *const)
-     ((eq? e 'cons) *const)
-     ((eq? e 'car)  *const)
-     ((eq? e 'cdr)  *const)
-     ((eq? e 'null?) *const)
-     ((eq? e 'eq?)   *const)
-     ((eq? e 'atom?) *const)
-     ((eq? e 'zero?) *const)
-     ((eq? e 'add1)  *const)
-     ((eq? e 'sub1)  *const)
-     ((eq? e 'number?) *const)
-     (else *identifier)))
-
-;Defenition of list-to-action
-(define (list-to-action e)
-  (cond
-    ((atom? (car e))
-     (cond
-       ((eq? (car e) 'quote) 
-        *quote)
-       ((eq? (car e) 'lambda)
-        *lambda)
-       ((eq? ( car e)('cond))
-        *cond)
-       (else *application)))
-    (else *application)))
+; TLS DOES SOMETHING SNEAKY. THEY HAVE ANOTHER BUILD FUNCTION. THIS IS FOR PRIMITIVES. AND THIS IS NEEDED
+; IF WE WANT TO TEST THE expression-to-action function.
+(define (build-for-prims tag value)
+  (list tag value))
 
 
-;The following function prodoucess the correct action for each possible S-expression
-( define (expression-to-action e)
-   ( cond
-      ((atom? e)(atom-to-action e))
-      ( else
-        ( list-to-action e))))
+(define (primitive? l)
+   (eq?(first l) ('primitive)))
 
-;Actions to constants
-( define (*const e table)
+
+(define (non-primitive l)
+  (eq? (first l)(' non-primitive)))
+
+
+;Action for constants
+(define (*const e table)
    (cond
      ((number? e) e)
      ((eq? e #t) #t)
      ((eq? e #f)#f)
      (else
-      (build ('primative) e))))
+      (build-for-prims 'primitive e))))
 
+;Action for quote
 (define (*quote e table)
   (text-of e))
 
+
 (define text-of second)
+
 
 (define (value e)
   (meaning e ('())))
 
-( define (meaning e table)
-   (lambda ( e table)
+
+(define (meaning e table)
+   (lambda (e table)
      ((expression-to-action e) e table)))
 
-( define ( *identifier e table)
+
+;Action for identifier
+(define (*identifier e table)
    (lookup-in-table e table initial-table))
 
-( define (initial-table name)
-   
-     ( car ('())))
 
-( define (*lambda e table)
-   (build(' non-primitive)
-         (cons table (cdr e))))
+(define (initial-table name)
+  (car ('())))
 
-( define table-of first)
-( define formals-of second)
+
+(define (*lambda e table)
+  (build('non-primitive)
+        (cons table (cdr e))))
+
+
+(define table-of first)
+(define formals-of second)
+
 
 ; need to write defeniton for third
 (define body-of third)
+
 
 (define (evcon lines table)
   (cond
@@ -406,13 +433,17 @@
     ((atom? x)(eq? x(' else)))
     (else #f)))
 
+
 (define question-of first)
 (define answer-of second)
+
 
 (define (*cond e table)
   (evcon(cond-lines-of e) table))
 
+
 (define cond-lines-of cdr)
+
 
 (define(evlis args table)
   (cond
@@ -421,19 +452,16 @@
      (cons(meaning(car args)table)
           (evlis(cdr args) table)))))
 
-( define (*application e table)
+
+(define (*application e table)
    (apply
     (meaning(function-of e ) table)
     (evilis(arguments-of e) table)))
 
+
 (define function-of car)
 (define arguments-of cdr)
 
-( define (primitive? l)
-   (eq?(first l) (' primitive)))
-
-(define (non-primitive l)
-  (eq? (first l)(' non-primitive)))
 
 (define (applyi fun vals)
   (cond
@@ -468,6 +496,7 @@
      ((eq? name 'number?)
       (number? (first vals))))))
 
+
 (define :atom?
   (lambda (x)
     (cond
@@ -486,6 +515,85 @@
              vals)
             (table-of closure))))
   
+
+
+;; ===========================================================================
+; This is the atom-to-action function. This was already given to us in TLS chapter 10. The purpose of this is
+; to decide how to evaluate an expression. And returns the correct "action". 
+;; ===========================================================================
+(define (atom-to-action e)
+  (cond
+     ((number? e) *const)
+     ((eq? e #t)  *const)
+     ((eq? e #f)  *const)
+     ((eq? e 'cons) *const)
+     ((eq? e 'car)  *const)
+     ((eq? e 'cdr)  *const)
+     ((eq? e 'null?) *const)
+     ((eq? e 'eq?)   *const)
+     ((eq? e 'atom?) *const)
+     ((eq? e 'zero?) *const)
+     ((eq? e 'add1)  *const)
+     ((eq? e 'sub1)  *const)
+     ((eq? e 'number?) *const)
+     (else *identifier)))
+
+
+
+
+
+;; ===========================================================================
+; This is the list-to-action function. This was also given in TLS. The purpose of this is to handle expressions
+; that are not atoms, hence why we have quote, lambda, and cond as a comparison for our eq? and return it.
+; Also deals with *application. 
+;; ===========================================================================
+(define (list-to-action e)
+  (cond
+    ((atom? (car e))
+     (cond
+       ((eq? (car e) 'quote) *quote)
+       ((eq? (car e) 'lambda) *lambda)
+       ((eq? (car e) 'cond) *cond)
+       (else *application)))
+    (else *application)))
+
+
+
+
+;; ===========================================================================
+; This is the expression-to-action function. This was also given in TLS. The purpose of this can be thought of
+; as the main function, it calls both of the two previous functions given what we have inputted. And then the other
+; two can be considered helper functions that do all of the work. 
+;; ===========================================================================
+(define (expression-to-action e)
+  (cond
+    ((atom? e)(atom-to-action e))
+    (else
+     (list-to-action e))))
+
+
+;Testing the function. I think these are all correct, not sure though.
+((expression-to-action 42) 42 '()) ;returns 42
+((expression-to-action #f) #f '()) ;returns #f
+((expression-to-action #t) #t '()) ;returns #t
+((expression-to-action 'car) 'car '())
+((expression-to-action 'cdr) 'cdr '())
+((expression-to-action 'null?) 'null? '())
+((expression-to-action 'eq?) 'eq? '())
+((expression-to-action 'atom?) 'atom? '())
+((expression-to-action 'zero?) 'zero? '())
+((expression-to-action 'add1) 'add1 '())
+((expression-to-action 'sub1) 'sub1 '())
+(expression-to-action '(quote hello))
+(expression-to-action '(lambda (x) x))
+(expression-to-action '(cond ((#t 1))))
+(expression-to-action '(add1 4))
+(expression-to-action '((lambda (x) x) 5))
+
+
+
+
+
 
 
    
