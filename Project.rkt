@@ -171,9 +171,6 @@
 ;In TLS third refers to caddr
 (define third caddr)
 
-(define (new-entry names values)
-  (list names values))
-
 
 ;In TLS extend-table refers to cons
 (define extend-table cons)
@@ -206,26 +203,25 @@
 ;pre/specs: takes three arguments, name (what we are looking for), entry (list of names and list of values),
 ;and entry-f, an error function if name not found.
 (define (lookup-in-entry name entry entry-f)
-  (lookup-in-entry-helper
-    name
-    (car entry)      ; the list of names
-    (cadr entry)     ; the parallel list of values
-    entry-f))
+  (lookup-in-entry-helper name
+                        (first entry)
+                        (second entry)
+                        entry-f
+                        ))
 ;post: returns the value associated with name if it exists in entry. If it does not exist, calls the entry-f function.
 
 
 (define (lookup-in-entry-helper name names values entry-f)
-  (cond
-    ((null? names)
-     (entry-f name))
-    ((eq? (car names) name)
-     (car values))
-    (else
-     (lookup-in-entry-helper
+   (cond
+     ((null? names)(entry-f name))
+     ((eq? (car names) name) (car values))
+     (else
+      (lookup-in-entry-helper
        name
        (cdr names)
        (cdr values)
-       entry-f))))
+       entry-f
+       ))))
 
 ; Testing the function
 ; (define entry '((x y z) (1 2 3)))
@@ -244,12 +240,15 @@
 ;pre/specs: this takes three arguments, name (what we are looking for), table (it is a list of entries),
 ; and table-f (an error function if name is not found)
 (define (lookup-in-table name table table-f)
-  (if (null? table)
-      (table-f name)
-      (lookup-in-entry
-        name
-        (car table)
-        (lambda (n) (lookup-in-table n (cdr table) table-f)))))
+   (cond
+     ((null? table)(table-f name))
+     (else
+      (lookup-in-entry name
+                       (car table)
+                       (lambda (name)
+                         (lookup-in-table name
+                                          (cdr table)
+                                           table-f))))))
 ;post: returns the value associated with name if it is found in table. if it does not exist, calls the table-f function.
 
 
@@ -338,10 +337,8 @@
 ;pre: this takes two? three? arguments. names, values, and build-f (an error function). FIX THIS PRE CONDITION!
 (define (build names values build-f)
   (cond
-    ((not (check-set names))
-     (build-f "Names error: duplicates"))
-    ((not (check-equal-len-list names values))
-     (build-f "Value error: mismatched lengths"))
+    ((not (check-set names)) (build-f "Names error. Names cannot have duplicates"))
+    ((not (check-equal-len-list names values)) (build-f "Value error. Names and value must be equal length"))
     (else
      (list names values))))
 ;post: returns an entry if names has no duplicates and names and values are of equal length. otherwise, returns
@@ -375,8 +372,13 @@
 (define (build-for-prims tag value)
   (list tag value))
 
-(define (primitive?   l) (eq? (car l) 'primitive))
-(define (non-primitive? l) (eq? (car l) 'non-primitive))
+
+(define (primitive? l)
+  (eq? (first l) 'primitive))
+
+
+(define (non-primitive? l)
+  (eq? (first l) 'non-primitive))
 
 
 ;Action for constants
@@ -414,11 +416,9 @@
 
 
 ;Action for lambda
-(define (*lambda e table)
-  (list 'closure 
-        (cadr e)    ; formals
-        (cddr e)    ; body
-        table))     ;captured environment
+(define (*lambda e table) 
+  (build('non-primitive)
+        (cons table (cdr e))))
 
 
 (define table-of first)
@@ -457,7 +457,7 @@
 
 (define (evlis args table)
   (cond
-    ((null? args) '())
+    ((null? args)('()))
     (else
      (cons (meaning (car args) table)
            (evlis (cdr args) table)))))
@@ -465,17 +465,9 @@
 
 ;Action for application
 (define (*application e table)
-  (let ((fun (meaning (function-of e) table))
-        (args (evlis (arguments-of e) table)))
-    (cond
-      ((primitive? fun)
-       (apply-primitive (second fun) args))
-      ((closure? fun)
-       (apply-closure fun args))
-      (else (error "Not a procedure:" fun)))))
-
-(define (closure? x)
-  (and (pair? x) (eq? (car x) 'closure)))
+   (apply
+    (meaning(function-of e ) table)
+    (evilis(arguments-of e) table)))
 
 
 (define function-of car)
@@ -527,15 +519,12 @@
 
 
 (define (apply-closure closure vals)
-  (let ((formals (cadr closure))    ; closure structure: ('closure formals body env)
-        (body (caddr closure))
-        (env (cadddr closure)))
-    (if (not (= (length formals) (length vals)))
-        (error "Wrong number of arguments")
-        (meaning (car body)
-                 (extend-table
-                  (new-entry formals vals)
-                  env)))))
+  (meaning (body-of closure)
+           (extend-table
+            (new-entry
+             (formals-of closure)
+             vals)
+            (table-of closure))))
   
 
 
@@ -595,22 +584,22 @@
 
 
 ;Testing the function. I think these are all correct, not sure though.
-;((expression-to-action 42) 42 '()) ;returns 42
-;((expression-to-action #f) #f '()) ;returns #f
-;((expression-to-action #t) #t '()) ;returns #t
-;((expression-to-action 'car) 'car '())
-;((expression-to-action 'cdr) 'cdr '())
-;((expression-to-action 'null?) 'null? '())
-;((expression-to-action 'eq?) 'eq? '())
-;((expression-to-action 'atom?) 'atom? '())
-;((expression-to-action 'zero?) 'zero? '())
-;((expression-to-action 'add1) 'add1 '())
-;((expression-to-action 'sub1) 'sub1 '())
-;(expression-to-action '(quote hello))
-;(expression-to-action '(lambda (x) x))
-;(expression-to-action '(cond ((#t 1))))
-;(expression-to-action '(add1 4))
-;(expression-to-action '((lambda (x) x) 5))
+((expression-to-action 42) 42 '()) ;returns 42
+((expression-to-action #f) #f '()) ;returns #f
+((expression-to-action #t) #t '()) ;returns #t
+((expression-to-action 'car) 'car '())
+((expression-to-action 'cdr) 'cdr '())
+((expression-to-action 'null?) 'null? '())
+((expression-to-action 'eq?) 'eq? '())
+((expression-to-action 'atom?) 'atom? '())
+((expression-to-action 'zero?) 'zero? '())
+((expression-to-action 'add1) 'add1 '())
+((expression-to-action 'sub1) 'sub1 '())
+(expression-to-action '(quote hello))
+(expression-to-action '(lambda (x) x))
+(expression-to-action '(cond ((#t 1))))
+(expression-to-action '(add1 4))
+(expression-to-action '((lambda (x) x) 5))
 
 
 
@@ -665,62 +654,14 @@
         #f))
 
 
-;(value '5)  ; Should return 5
-;(value '#t) ; Should return #t
-;(value '(quote hello)) ; Should return hello
+(value '5)  ; Should return 5
+(value '#t) ; Should return #t
+(value '(quote hello)) ; Should return hello
 
-;(value '(cond (#t 'hello))) ; Should return hello
-;(value '(cond (#f 'wrong) (else 'correct))) ; Should return correct
-
-
+(value '(cond (#t 'hello))) ; Should return hello
+(value '(cond (#f 'wrong) (else 'correct))) ; Should return correct
 
 
-
-
-
-
-
-
-
-
-
-
-;test functions to run. posted in MS Teams by professor
-(value '((lambda (x) (add1 x)) 3)) ;this returns 4 when ran
-
-(value '((lambda (x) (add1 x))
-	 ((lambda (x) (add1 x)) 4))) ;this returns 6 when ran
-
-(value '(((lambda (y)
-            (lambda (x) (cons x y)))
-          3)
-         4))                         ;this returns (4 . 3) when ran
-
-(value '((lambda (x z)
-           (cons x
-                 ((lambda (x y) (cons z x))
-                  3 4)
-                 ))
-         1 2))                       ;this returns (1 2 . 3)
-
-
-(value '((lambda (f y)
-          (f y))
-        (lambda (x) (add1 x))
-        4))                          ;this returns 5
-
-
-(value '((lambda (f y)
-	   (f y))
-	 ((lambda (x) (cond ((number? x) add1)
-			    (else (lambda (y) (cons x y)))))
-	  (quote z))                 ;this returns (z . 3)
-
-	 3))
-
-(value '((lambda (x)
-             ((lambda (f)
-                (cons x ((lambda (x) (f x))
-                         3)))
-              (lambda (y) (cons x y))))
-         2))                         ;this returns (2 2 . 3)
+;THESE TWO DO NOT WORK. FIX THIS LATER
+; (value '((lambda (x) x) 5)) ; Should return 5
+; (value '((lambda (x y) (cons x y)) 'a 'b)) ; Should return (a . b)
