@@ -1,3 +1,7 @@
+#lang eopl
+;this is refering to our filed called Project.rkt which contains our tls interpreter along with built in TLS primitives
+(load "Project.rkt")
+
 ;This will be the syntax checker for TLS
 
 ;Design idea for Inductive defeniton
@@ -6,6 +10,7 @@
 ;has correct syntax which include but not limited to
 ;;     basic errors such as malformed cond and lambda expressions; (ii) detect when primitives are
 ;;     applied to the wrong number of arguments; and (iii) detect the presence of unbound variables.
+
 
 
 ;First we have to start off with all the primatives in TLS and store them in a list to assure that the syntax chekcer can refrence them
@@ -18,13 +23,14 @@
 ; some value come before it, as must and, and or, and if must only contain 2 possible outputs.
 ;In or TLS interpreter there were also some translations that we did from basic R5RS So we should also add that into the primitive-names pool.
 ; A simple way to maybe tackle the problem is to maybe have a cases function where our main body could refer to so once it finds the name of the primitive it then checks the
-;amount of conditions it shoudl have, so as an example atom? should only have 1 since its only checking one piece of information.
+;amount of conditions it should have, so as an example atom? should only have 1 since its only checking one piece of information.
 
 (define special-forms '(lambda cond if quote and or))
 
 
 ;This is all the condtions that are needed to check if the syntax is valid or not
 ; name is the primitive that is being checked and vals is the supposed vals that makes it a correct syntax
+
 (define (conditions name vals)
   (cond
     ((or (eq? name 'car) (eq? name 'first)) (= (length vals) 1))
@@ -49,6 +55,32 @@
 
 ;This will be our main body function which will do all the heavy lifiting for the checking of syntax
 
+;Along with the main body functions we will need to implement some functions such as member?
+
+;pre: lst is a list, x is an atom
+(define (member? x lst)
+  (cond ((null? lst) #f)
+        ((eq? x (car lst)) #t)
+        (else (member? x (cdr lst)))))
+;post: returns whether an element x is a member of lst
+
+;pre: lst is a list
+(define (duplicates? lst)
+  (cond ((null? lst) #f)
+        ((member? (car lst) (cdr lst)) #t)
+        (else (duplicates? (cdr lst)))))
+;returns: returns true if the list lst contains duplicates
+
+;this is a function that gathers errors from a list of expressions
+;this is helpful when it comes to a function that has multiple errors \
+;this code is wrong someone fix it pls
+(define (gathers errs lst env)
+  (if (null? lst)
+      errs
+      (gather (append errs (syntax-checker (car lst) env))
+              (cdr lst) env)))
+         
+
 ;pre condtion
 
 ;post condition
@@ -63,7 +95,7 @@
 
 
 
-
+;pre condition: expr is an expressions
 ( define (syntax-checker expr env)
    (cond
      ;The following will be the base cases
@@ -78,15 +110,16 @@
 
     
     ))
-
+;post returns error if a syntax error is found. 
 
 ;Helpers for syntax-checker
 ;; ============================================================================
+
+;pre: x is an s-expression
 ( define ( constant? x)
    (or (number? x) (boolean? x) (string? x)(char? x)))
+;post: returns true if x is a number, boolean, string, or char.
+
 
 (define (var? x env)
   (or (memq x env) (memq x primitive-names)))
-
-
-     
