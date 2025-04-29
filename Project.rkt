@@ -584,22 +584,22 @@
 
 
 ;Testing the function. I think these are all correct, not sure though.
-((expression-to-action 42) 42 '()) ;returns 42
-((expression-to-action #f) #f '()) ;returns #f
-((expression-to-action #t) #t '()) ;returns #t
-((expression-to-action 'car) 'car '())
-((expression-to-action 'cdr) 'cdr '())
-((expression-to-action 'null?) 'null? '())
-((expression-to-action 'eq?) 'eq? '())
-((expression-to-action 'atom?) 'atom? '())
-((expression-to-action 'zero?) 'zero? '())
-((expression-to-action 'add1) 'add1 '())
-((expression-to-action 'sub1) 'sub1 '())
-(expression-to-action '(quote hello))
-(expression-to-action '(lambda (x) x))
-(expression-to-action '(cond ((#t 1))))
-(expression-to-action '(add1 4))
-(expression-to-action '((lambda (x) x) 5))
+;((expression-to-action 42) 42 '()) ;returns 42
+;((expression-to-action #f) #f '()) ;returns #f
+;((expression-to-action #t) #t '()) ;returns #t
+;((expression-to-action 'car) 'car '())
+;((expression-to-action 'cdr) 'cdr '())
+;((expression-to-action 'null?) 'null? '())
+;((expression-to-action 'eq?) 'eq? '())
+;((expression-to-action 'atom?) 'atom? '())
+;((expression-to-action 'zero?) 'zero? '())
+;((expression-to-action 'add1) 'add1 '())
+;((expression-to-action 'sub1) 'sub1 '())
+;(expression-to-action '(quote hello))
+;(expression-to-action '(lambda (x) x))
+;(expression-to-action '(cond ((#t 1))))
+;(expression-to-action '(add1 4))
+;(expression-to-action '((lambda (x) x) 5))
 
 
 
@@ -654,14 +654,52 @@
         #f))
 
 
-(value '5)  ; Should return 5
-(value '#t) ; Should return #t
-(value '(quote hello)) ; Should return hello
+;(value '5)  ; Should return 5
+;(value '#t) ; Should return #t
+;(value '(quote hello)) ; Should return hello
 
-(value '(cond (#t 'hello))) ; Should return hello
-(value '(cond (#f 'wrong) (else 'correct))) ; Should return correct
+;(value '(cond (#t 'hello))) ; Should return hello
+;(value '(cond (#f 'wrong) (else 'correct))) ; Should return correct
 
 
-;THESE TWO DO NOT WORK. FIX THIS LATER
-; (value '((lambda (x) x) 5)) ; Should return 5
-; (value '((lambda (x y) (cons x y)) 'a 'b)) ; Should return (a . b)
+(value '((lambda (x) (add1 x)) 3))
+
+
+(value '((lambda (x) (add1 x))
+	 ((lambda (x) (add1 x)) 4)))
+
+
+(value '(((lambda (y)
+            (lambda (x) (cons x y)))
+          3)
+         4))
+
+
+(value '((lambda (x z)
+           (cons x
+                 ((lambda (x y) (cons z x))
+                  3 4)
+                 ))
+         1 2))
+
+
+(value '((lambda (f y)
+          (f y))
+        (lambda (x) (add1 x))
+        4))
+
+
+(value '((lambda (f y)
+	   (f y))
+	 ((lambda (x) (cond ((number? x) add1)
+			    (else (lambda (y) (cons x y)))))
+	  (quote z))
+
+	 3))
+
+(value '((lambda (x)
+             ((lambda (f)
+                (cons x ((lambda (x) (f x))
+                         3)))
+              (lambda (y) (cons x y))))
+         2))
