@@ -95,6 +95,16 @@
 
 ;COMMENTS FOR US: Put any ideas or what you plan to work on/improve or if stuck on something.
 ;; ============================================================================
+
+;4/13/25 - Alexis (Comments Below)
+;1.1 of the project is based on TLS chapter 10. The implementations of the the function.
+;One of the important things I have noticed are most functions are tail recursive (lookup-in-entry-helper, lookup,entry, etc.)
+;This will be crucial for the proofs required from 1.5 so for now I have made a seperate file containing the proofs. 
+;Before jumping into the proofs kenneth proposed we finish building the interperter so for now the proofs are not needed. 
+;However, I labled each code with either T Recursion or Recursion so we will know in the future what proof will be needed
+;For each function.
+
+
 ; 4/14/25 - Hamim (Comments Below)
 ; So 1.1 of the project is telling us to make the functions in chapter 10 of the book ourselves, in R5RS scheme. The functions that they have
 ; are
@@ -113,11 +123,12 @@
 ; by one and made the functions. 
 
 
+
 ; 4/16/25 - Hamim (Comments Below)
 ; Today was just completing the build function in TLS, what this function does is that it returns an entry if it satisfies two conditions. The
 ; first condition being that the names list does not contain duplicates, aka is a set. And the second condition being that the values list and
 ; names list are of equal length. Both of the conditions have their own function, check-set and check-equal-len-list. Kenneth had already begun
-; a basic outline of it, I just added onto it and finalized it. Alexis and me were working on the pre and post conditions as well.
+; a basic outline of it, I just added onto it and finalized it. Alexis and myself were working on the pre and post conditions as well.
 
 
 ; 4/17/25 - Hamim (Comments Below)
@@ -129,7 +140,12 @@
 
 
 
-
+; 4/28/25 - Alexis (Comments Below)
+; Since most of the interpreter is done Hamim volunteered to clean up the code. We came accross an issue when using the test expressions 
+; Professor Troeger provided. We concluded it was due to apply, instead of using the apply we implemented through TLS, the function *application
+; was using the built in apply. After discovering that issue, Hamim uncovered other issues with our initial-table and new entry.
+; After looking into apply I started working on syntax-checker. Kenneth already started the outline. I added the pre and post condition.
+; I also implemented functions such as member?, duplicates, check-cond(not fully done), and error messages. 
 
 
 
