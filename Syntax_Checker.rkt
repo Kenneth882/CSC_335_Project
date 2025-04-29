@@ -73,7 +73,7 @@
 
 ;this is a function that gathers errors from a list of expressions
 ;this is helpful when it comes to a function that has multiple errors \
-;this code is wrong someone fix it pls
+;this code is wrong someone fix it 
 (define (gathers errs lst env)
   (if (null? lst)
       errs
@@ -123,3 +123,9 @@
 
 (define (var? x env)
   (or (memq x env) (memq x primitive-names)))
+
+;Cond is a very powerful function.
+;Since cond is a special form it follows it's own rules meaning we will probably have to do a checker for cond as well.
+
+;get back to this function later
+(define (check-cond expr env))
