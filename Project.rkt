@@ -141,8 +141,12 @@
 
 ;4/14-Kenneth(Commments Below)
 ;I implememnted most of TLS straight from the book, some of the functions still need to be linked.Most of the test cases that i did work with the function
-; on its own, however there are certain functions that connect that have some logical errors to them, so we will hopfully work on fixxing that. Since TLS
+; on its own, however there are certain functions that connect that have some logical errors to them, so we will hopfully work on fixing that. Since TLS
 ;had some repeated functions that did diffrent things we still have to clean and fix that so that each function can past every test case.
+
+;4/14-Alexis(Comments Below)
+; I reviewed the code Kenneth implemented and fixed some errors, and added some of the basic functions from the book TLS. 
+; Kenneth explained the outline and how some of the functions are repeated and some of the logic in TLS is flawed.
 
 
 ; 4/16/25 - Hamim (Comments Below)
@@ -186,13 +190,21 @@
 ;basic operations are done.The specific TLS functions still need to be checked and also need to work on showing specific
 ;error messages instead of just outputting false.
 
+;4/29-Alexis (Comments Below)
+; I realized how complicated Cond is when it comes to this since I will need the helper functions made for expression. 
+; Although And and other functions were made, I only used syntax-checker we made.
+; I also added specs to my previous function kenneth and I made. 
+; And finished more basic functions.
 
 ;4/30/25 - Hamim (Comments Below)
 ;Cleaning up code, making sure test cases all run. In order to make the output look nicer, I added two (newline) so it is easier to see the output and what
 ;section of code corresponds to what.
 
 
-
+;4/30/25 - Alexis (Comments Below)
+; I implemented some finishing touches to 1.1 for we can present the code to the professor tomorrow. 
+; I also cleaned up 1.2 file and added some specs we missed. 
+; Fixed some errors as well.
 
 
 ; Now how do we approach this? In chapter 10 of the book we have some functions written completely and we just need to convert that to R5RS,
