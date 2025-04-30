@@ -245,8 +245,32 @@
     ((null? lst) #t)
     ((symbol?(car lst))(is-symbol?(cdr lst)))
     (else #f)))
-;Cond is a very powerful function.
-;Since cond is a special form it follows it's own rules meaning we will probably have to do a checker for cond as well.
 
-;get back to this function later
-;(define (check-cond expr env))
+
+;design idea for cond:
+;Cond is a very powerful function.
+;Since cond is a special form we will need a checker for it 
+;cond proper syntax is (cond  <clause1>  <clause2>  …  <clauseN>).
+;An else statement is optional but it is usually followed before closing the cond function when the clause is not true or not meet the conditions. 
+;We will also need to check if the proper syntax for the clauses and else hold true for this. 
+;And finally else must always be at the end of the cond and cond cannot be empty.
+;My thinking is we first start off by checking if theres any clauses in cond if not then false. 
+:we then check if the structure of the cond and clauses are correct.
+
+
+;finished cond (logic a little flawed but will discuss with the professor or withing the group)
+;need to get feedback since this looks correct but lacks error messages.
+;also seems redundant probably a better way to do it
+
+(define (check-cond expr env)
+  (define (expr-check body)
+    (cond [(null? body) #t]
+          [else (and (syntax-checker (car body) env)
+                     (expr-check (cdr body)))]))
+  (define (echeck cls)
+    (cond [(null? cls) #t]
+          [else
+           (and (syntax-checker (caar cls) env) 
+                (expr-check (cdar cls))
+                (echeck (cdr cls)))]))
+  (echeck (cdr expr)))
