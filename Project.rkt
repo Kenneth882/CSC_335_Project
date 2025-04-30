@@ -131,12 +131,7 @@
 
 
 ; 4/17/25 - Hamim (Comments Below)
-
-
-
-; 4/19/25 - Hamim (Comments Below)
-
-
+;Action functions.
 
 
 ; 4/28/25 - Alexis (Comments Below)
@@ -144,8 +139,21 @@
 ; Professor Troeger provided. We concluded it was due to apply, instead of using the apply we implemented through TLS, the function *application
 ; was using the built in apply. After discovering that issue, Hamim uncovered other issues with our initial-table and new entry.
 ; After looking into apply I started working on syntax-checker. Kenneth already started the outline. I added the pre and post condition.
-; I also implemented functions such as member?, duplicates, check-cond(not fully done), and error messages. 
+; I also implemented functions such as member?, duplicates, check-cond(not fully done), and error messages.
 
+
+;4/29/25 - Hamim (Comments Below)
+; Adding on to Alexis's comments. Yes, there were errors when certain test cases were run. These errors were annoying because it let to the same few
+; functions. And those functions were linked to other functions. It was like a loop of errors in a sense. There were two main issues. My build function,
+; the apply function, and the primitive and non-primitive functions. The root errors were 1) something was not a procedure, mcar errors, and mcdr errors.
+; In order to solve this, I spent all of today reading TLS carefully. I noticed that we did have some missing functions, spelling errors, and we made some
+; functions a little more complex than it should have been. We were missing quote, lambda, and our action functions were wrong as well. The value and meaning
+; were also incorrect.
+
+
+;4/30/25 - Hamim (Comments Below)
+;Cleaning up code, making sure test cases all run. In order to make the output look nicer, I added two (newline) so it is easier to see the output and what
+;section of code corresponds to what.
 
 
 
@@ -235,7 +243,8 @@
 
 
 ;Not in TLS, but defined this because it is easier to do rather than type out constantly,
-;This returns #t when an atom a number, boolean, or primitive procedure. Or false otherwise.
+;This returns #t when an atom is a number, boolean, or primitive procedure. Or false otherwise.
+; This is used to determine if an atom should be treated like a constant or a primitive procedure.
 (define (const-atom? a)
   (or (number? a)
       (eq? a #t)
@@ -243,22 +252,26 @@
       (memq a '(cons car cdr null? eq? atom? zero? add1 sub1 number?))))
 
 
-;This takes an entry and a table and creates a new table by putting the new entry
-;in front of the old one
+;This makes a new table. It takes formal parameters, values, and the current table. And then
+;using (define new-entry build), it creates a new entry and then adds it to the front.
 (define (extend-table formals vals table)
   (cons (build formals vals) table))
 
 
-;Made because we assume that expression-to-action works. 
+;This is a really important function, possibly one of the most important ones. This just evaluates everything.
+;A lot of the test cases in the book and from Professor Troeger use this for test cases.
 (define (value e)
   (meaning e '()))
 
 
-;Made because we assume that expression-to-action works. 
+;Made because we assume that expression-to-action works. This evaluates the expression in a given
+;environment.
 (define (meaning e table)
   ((expression-to-action e) e table))
 
 
+;So this was a main reason why our code was not working. In TLS, it gives us initial-table. However, if we carefully
+;read it, it says that this should never be used really. So this is just like a fall back and gives an error. 
 (define (initial-table name)
   (error "Unbound identifier" name))
 
@@ -287,11 +300,15 @@
 
 
 (define (lookup-in-entry name entry entry-f)
-  (let loop ((names (first entry))
-             (values (second entry)))
-    (cond ((null? names) (entry-f name))
-          ((eq? (car names) name) (car values))
-          (else (loop (cdr names) (cdr values))))))
+  (let loop
+    ((names (first entry))
+     (values (second entry)))
+    
+    (cond
+      ((null? names) (entry-f name))
+      ((eq? (car names) name) (car values))
+      (else
+       (loop (cdr names) (cdr values))))))
 
 ; Testing the function
 ; (define entry '((x y z) (1 2 3)))
@@ -313,8 +330,7 @@
      ((null? table)(table-f name))
      (else
       (lookup-in-entry name (car table)
-                       (lambda (name)
-                         (lookup-in-table name (cdr table) table-f))))))
+                       (lambda (name) (lookup-in-table name (cdr table) table-f))))))
 ;post: returns the value associated with name if it is found in table. if it does not exist, calls the table-f function.
 
 
@@ -401,17 +417,17 @@
 ;; ===========================================================================
 
 ;pre: this takes two? three? arguments. names, values, and build-f (an error function). FIX THIS PRE CONDITION!
-(define build  list)
-(define new-entry build)   ;; ← simple alias, no behavioural change
+(define build list)
+(define new-entry build) ;this is straight from TLS. Need to fix this section.
 
 ;post: returns an entry if names has no duplicates and names and values are of equal length. otherwise, returns
 ;the appropriate error message. 
 
 
 ;Testing the function
-; (build '(x y z) '(1 2 3) (lambda (message) message))     ;returns ((x y z) (1 2 3))
-; (build '(x y z) '(1 2 3 4) (lambda (message) message))   ;returns value error.
-; (build '(x x y z) '(1 2 3 4) (lambda (message) message)) ;returns name error
+;(build '(x y z) '(1 2 3))     ;returns ((x y z) (1 2 3))
+; (build '(x y z) '(1 2 3 4))   ;returns value error.
+; (build '(x x y z) '(1 2 3 4)) ;returns name error
 
 
 
@@ -465,10 +481,12 @@
 
 ;; evcon : list-of-cond-clauses table → value
 (define (evcon lines table)
-  (cond ((else? (question-of (car lines))) (meaning (answer-of (car lines)) table))
-        ((meaning (question-of (car lines)) table)
-         (meaning (answer-of (car lines)) table))
-        (else (evcon (cdr lines) table))))
+  (cond
+    ((else? (question-of (car lines))) (meaning (answer-of (car lines)) table))
+    ((meaning (question-of (car lines)) table)
+     (meaning (answer-of (car lines)) table))
+    (else
+     (evcon (cdr lines) table))))
 
 
 
@@ -482,8 +500,7 @@
 (define (evlis args table)
   (if (null? args)
       '()
-      (cons (meaning (car args) table)
-            (evlis (cdr args) table))))
+      (cons (meaning (car args) table) (evlis (cdr args) table))))
 
 
 ;Action for application
@@ -580,12 +597,12 @@
 
 
 ;Testing the function. I think these are all correct, not sure though.
-;((expression-to-action 42) 42 '()) ;returns 42
-;((expression-to-action #f) #f '()) ;returns #f
-;((expression-to-action #t) #t '()) ;returns #t
-;((expression-to-action 'car) 'car '())
-;((expression-to-action 'cdr) 'cdr '())
-;((expression-to-action 'null?) 'null? '())
+;((expression-to-action 42) 42 '())           ;returns 42
+;((expression-to-action #f) #f '())           ;returns #f
+;((expression-to-action #t) #t '())           ;returns #t
+;((expression-to-action 'car) 'car '())       ;returns (primitive car)
+;((expression-to-action 'cdr) 'cdr '())       ;returns (primitive cdr)
+;((expression-to-action 'null?) 'null? '())   ;returns (primitive null?)
 ;((expression-to-action 'eq?) 'eq? '())
 ;((expression-to-action 'atom?) 'atom? '())
 ;((expression-to-action 'zero?) 'zero? '())
@@ -596,7 +613,8 @@
 ;(expression-to-action '(cond ((#t 1))))
 ;(expression-to-action '(add1 4))
 ;(expression-to-action '((lambda (x) x) 5))
-
+(newline)
+(newline)
 
 
 
@@ -650,25 +668,42 @@
         #f))
 
 
-;(value '5)  ; Should return 5
-;(value '#t) ; Should return #t
-;(value '(quote hello)) ; Should return hello
 
-;(value '(cond (#t 'hello))) ; Should return hello
+
+
+;my own test cases
+;(value '5)                   ; Should return 5
+;(value '#t)                  ; Should return #t
+;(value '(quote hello))       ; Should return hello
+;(value '(cond (#t 'hello)))  ; Should return hello
 ;(value '(cond (#f 'wrong) (else 'correct))) ; Should return correct
+(newline)
+(newline)
 
 
+
+
+
+
+
+
+
+
+;test cases from professor. these were posted on MS Teams.
 (value '((lambda (x) (add1 x)) 3))
+;this returns 4
 
 
 (value '((lambda (x) (add1 x))
 	 ((lambda (x) (add1 x)) 4)))
+;this returns 6
 
 
 (value '(((lambda (y)
             (lambda (x) (cons x y)))
           3)
          4))
+;this returns (4 . 3)
 
 
 (value '((lambda (x z)
@@ -677,12 +712,14 @@
                   3 4)
                  ))
          1 2))
+;this returns (1 2 . 3)
 
 
 (value '((lambda (f y)
           (f y))
         (lambda (x) (add1 x))
         4))
+;this returns 5
 
 
 (value '((lambda (f y)
@@ -690,8 +727,9 @@
 	 ((lambda (x) (cond ((number? x) add1)
 			    (else (lambda (y) (cons x y)))))
 	  (quote z))
-
 	 3))
+;this returns (z . 3)
+
 
 (value '((lambda (x)
              ((lambda (f)
@@ -699,3 +737,4 @@
                          3)))
               (lambda (y) (cons x y))))
          2))
+;this returns (2 2 . 3)
