@@ -113,12 +113,13 @@
     (and(conditions(first expr)(cdr expr))
         (check-args(cdr expr) env)))
 
-   (and(pair? expr)(eq?(car expr) 'if)
-       check-if expr env) 
+   ((and(pair? expr)(eq?(car expr) 'if))
+       (check-if expr env))
+   (else #f )))
 
 
     
-   (else #f)))
+  
        
 
    ;This is used to check the arguments are well formed
@@ -127,7 +128,10 @@
 (define (check-args args env)
   (cond ((null? args) #t)
         ((and (syntax-checker (car args) env)
-              (check-args (cdr args) env)))))
+              (check-args (cdr args) env)))
+        (else #f)))
+
+
 
 
 
@@ -137,11 +141,20 @@
 ; if follows
 ;IF this , else that
 
+
+
 (define (check-if expr env)
   (and(=(length expr )4)
       (syntax-checker(cadr expr) env)
       (syntax-checker(caddr expr) env)
       (syntax-checker(cadddr expr) env)))
+
+
+
+;tests
+;(check-if '(if (= 10 10) #t #f) '()) ; => #t
+;;(check-if '(if (= 10 10) #t) '())    ; => #f
+;;(check-if '(if 10 #t #f) '())        ; => #t
 
 
 
@@ -157,7 +170,7 @@
 
 ;post returns error if a syntax error is found. 
 
-;Helpers for syntax-checker
+;Helpers for syntax-checker 
 ;; ============================================================================
 
 ;pre: x is an s-expression
