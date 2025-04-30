@@ -1,4 +1,4 @@
-#lang eopl
+
 ;this is refering to our filed called Project.rkt which contains our tls interpreter along with built in TLS primitives
 (load "Project.rkt")
 
@@ -69,6 +69,7 @@
   (cond ((null? lst) #f)
         ((member? (car lst) (cdr lst)) #t)
         (else (duplicates? (cdr lst)))))
+
 ;returns: returns true if the list lst contains duplicates
 
 ;this is a function that gathers errors from a list of expressions
@@ -106,10 +107,54 @@
     
     ((and (pair? expr) (eq? (car expr) 'quote))
      (and (= (length expr) 2)))
+    
+    ;This is used for simiple arethmetic like + - * and /
+   ((and(pair? expr)(member? (car expr) primitive-names))
+    (and(conditions(first expr)(cdr expr))
+        (check-args(cdr expr) env)))
+
+   (and(pair? expr)(eq?(car expr) 'if)
+       check-if expr env) 
 
 
     
-    ))
+   (else #f)))
+       
+
+   ;This is used to check the arguments are well formed
+   ;SHould be used after checking the condtions that way program can tell
+   ; something is invalid with the inputs
+(define (check-args args env)
+  (cond ((null? args) #t)
+        ((and (syntax-checker (car args) env)
+              (check-args (cdr args) env)))))
+
+
+
+    
+     
+;If implemementer
+; if follows
+;IF this , else that
+
+(define (check-if expr env)
+  (and(=(length expr )4)
+      (syntax-checker(cadr expr) env)
+      (syntax-checker(caddr expr) env)
+      (syntax-checker(cadddr expr) env)))
+
+
+
+
+
+
+
+
+
+
+
+
+
 ;post returns error if a syntax error is found. 
 
 ;Helpers for syntax-checker
@@ -128,4 +173,4 @@
 ;Since cond is a special form it follows it's own rules meaning we will probably have to do a checker for cond as well.
 
 ;get back to this function later
-(define (check-cond expr env))
+;(define (check-cond expr env))
