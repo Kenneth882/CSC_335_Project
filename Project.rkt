@@ -191,11 +191,14 @@
 
 
 ;This is a simple helper function that can be called that counts the number of elements in a list
+
+;Pre: lst is a list
+;Recur
 (define (count-elements lst)
   (if (null? lst)
       0
-      (+ 1 (count-elements (cdr lst)))))
-
+      (+ 1 (count-elements (cdr last)))))
+;Post: returns the length of the list
 
 ;A function used to add by 1
 (define (add1 n)
@@ -309,29 +312,28 @@
 ;; ===========================================================================
 ; This is the lookup-in-entry function. Accompanied with it is the lookup-in-entry-helper.
 ;; ===========================================================================
-;Design Idea:
-;when looking up the entry there will be 3 possible cases, one where the name is found in entry, it will then return the associated value with the name.
-;If it does not exist it will return the associated value once the entry-f is called.
-;The third case will be if no name is given aka an empty char/string, then we call the entry-f function.
-; ___________________
-;[_______ayp|nyp_____]------>(first entry)= ayp----->(second entry) =nyp -------->(if ayp and nyp = name then we return entry-f)
-;                                                                                   (needs helper)
+                                                                             
 
-;ayp: the first tables (ill go more in detail later i gotta push)
-;nyp: the remaining tables
+; design idea:
+; Since the code was provided in TLS we just need to break down the logic.
+; This function checks if a specific name is found in an entry
+; If it does exist in entry then we return the associated value.
+; If not then we return an error message.
+: The way we breakdown the logic is this, we use a loop to check every entry until there are no more entrys.
+; uses t-recur
 
-
+;Pre: name is string, entry is a list
 
 (define (lookup-in-entry name entry entry-f)
   (let loop
     ((names (first entry))
-     (values (second entry)))
-    
+     (values (second entry)))    
     (cond
       ((null? names) (entry-f name))
       ((eq? (car names) name) (car values))
       (else
        (loop (cdr names) (cdr values))))))
+;Post: returns entry-f if name is not in any entry, if name exist in entry then returns the associated value
 
 ; Testing the function
 ; (define entry '((x y z) (1 2 3)))
@@ -438,7 +440,7 @@
 ; the names list and values list are the same length. And then it returns the entry.
 ;; ===========================================================================
 
-;pre: this takes two? three? arguments. names, values, and build-f (an error function). FIX THIS PRE CONDITION!
+;pre: this takes two? three? arguments. names, values, and build-f (an error function).
 (define build list)
 (define new-entry build) ;this is straight from TLS. Need to fix this section.
 
@@ -468,12 +470,15 @@
 ; we use action functions. We have atom-to-action, expression-to-action, and list-to-action. 
 ;; ============================================================================
 
+;Pre: fun may be any Scheme datum
 (define (primitive? fun)
   (and (pair? fun) (eq? (first fun) 'primitive)))
+;Post: returns true if fun is a pair and the first element of that pair is a primitive
 
-
+:pre: fun may be any Scheme datum
 (define (non-primitive? fun)
   (and (pair? fun) (eq? (first fun) 'non-primitive)))
+; Post: returns if fun is a pair and the first element of that pair is not aprimitive
 
 
 ;Action for constants
@@ -502,6 +507,9 @@
 
 
 ;; evcon : list-of-cond-clauses table → value
+
+;T-recur
+;Pre: lines is a list, and table is a list
 (define (evcon lines table)
   (cond
     ((else? (question-of (car lines))) (meaning (answer-of (car lines)) table))
@@ -509,6 +517,7 @@
      (meaning (answer-of (car lines)) table))
     (else
      (evcon (cdr lines) table))))
+;Post: returns the value of the question and answers
 
 
 
@@ -533,6 +542,8 @@
 
 ;In TLS, the function was originally called "apply", but Scheme R5RS already has its built in apply,
 ;so I made another one specifically called tls-apply.
+
+
 (define (tls-apply fun vals)
   (cond
     ((primitive? fun) (tls-apply-primitive (second fun) vals))
