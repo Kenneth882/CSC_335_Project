@@ -79,7 +79,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; 1.1 Implement TLS in R5RS Scheme
-
 ;In chapter 10 of TLS we were introduced to an interpreter and our job is to turn it into code in R5RS.
 
 
@@ -149,8 +148,14 @@
 
 
 
+
+
+
+
 ; BASIC HELPER FUNCTIONS. These are basic functions such as atom?, add1, etc.
 ; Or they are functions that have been translated to R5RS Scheme.
+; Also included in this section are functions from TLS that we will use for our
+; more complex functions, like action-to-action, action-to-list, etc.
 ;; ============================================================================
 
 ; This is the atom function which will check when an element is an atom and saves us from
@@ -188,8 +193,74 @@
 (define third caddr)
 
 
-;In TLS extend-table refers to cons
-(define extend-table cons)
+;In TLS, this is the else? function
+(define (else? x)
+  (and (atom? x) (eq? x 'else)))
+
+
+;In TLS, this is returning the car of a cond
+(define question-of first)
+
+
+;In TLS, this returns the cadr of a cond
+(define answer-of second)
+
+
+;In TLS, this gives the cdr of a cond
+(define cond-lines-of cdr)
+
+
+;In TLS, this extracts the car of an application
+(define function-of car)
+
+
+;In TLS, this extracts the cdr of an application
+(define arguments-of cdr)
+
+
+;In TLS, this returns the data inside a quote
+(define text-of second)
+
+
+;In TLS, this gets the environment from a closure
+(define table-of first)
+
+
+;In TLS, this gets the parameters from a closure
+(define formals-of second)
+
+
+;In TLS, this returns the caddr
+(define body-of third)
+
+
+;Not in TLS, but defined this because it is easier to do rather than type out constantly,
+;This returns #t when an atom a number, boolean, or primitive procedure. Or false otherwise.
+(define (const-atom? a)
+  (or (number? a)
+      (eq? a #t)
+      (eq? a #f)
+      (memq a '(cons car cdr null? eq? atom? zero? add1 sub1 number?))))
+
+
+;This takes an entry and a table and creates a new table by putting the new entry
+;in front of the old one
+(define (extend-table formals vals table)
+  (cons (build formals vals) table))
+
+
+;Made because we assume that expression-to-action works. 
+(define (value e)
+  (meaning e '()))
+
+
+;Made because we assume that expression-to-action works. 
+(define (meaning e table)
+  ((expression-to-action e) e table))
+
+
+(define (initial-table name)
+  (error "Unbound identifier" name))
 
 
 ; There are certain functions that we do not need to make as they are already in Scheme. For example,
@@ -203,7 +274,6 @@
 ;; ===========================================================================
 ; This is the lookup-in-entry function. Accompanied with it is the lookup-in-entry-helper.
 ;; ===========================================================================
-
 ;Design Idea:
 ;when looking up the entry there will be 3 possible cases, one where the name is found in entry, it will then return the associated value with the name.
 ;If it does not exist it will return the associated value once the entry-f is called.
@@ -216,28 +286,12 @@
 ;nyp: the remaining tables
 
 
-;pre/specs: takes three arguments, name (what we are looking for), entry (list of names and list of values),
-;and entry-f, an error function if name not found.
 (define (lookup-in-entry name entry entry-f)
-  (lookup-in-entry-helper name
-                        (first entry)
-                        (second entry)
-                        entry-f
-                        ))
-;post: returns the value associated with name if it exists in entry. If it does not exist, calls the entry-f function.
-
-
-(define (lookup-in-entry-helper name names values entry-f)
-   (cond
-     ((null? names)(entry-f name))
-     ((eq? (car names) name) (car values))
-     (else
-      (lookup-in-entry-helper
-       name
-       (cdr names)
-       (cdr values)
-       entry-f
-       ))))
+  (let loop ((names (first entry))
+             (values (second entry)))
+    (cond ((null? names) (entry-f name))
+          ((eq? (car names) name) (car values))
+          (else (loop (cdr names) (cdr values))))))
 
 ; Testing the function
 ; (define entry '((x y z) (1 2 3)))
@@ -252,19 +306,15 @@
 ;; ===========================================================================
 ; This is the lookup-in-table function. 
 ;; ===========================================================================
-
 ;pre/specs: this takes three arguments, name (what we are looking for), table (it is a list of entries),
 ; and table-f (an error function if name is not found)
 (define (lookup-in-table name table table-f)
    (cond
      ((null? table)(table-f name))
      (else
-      (lookup-in-entry name
-                       (car table)
+      (lookup-in-entry name (car table)
                        (lambda (name)
-                         (lookup-in-table name
-                                          (cdr table)
-                                           table-f))))))
+                         (lookup-in-table name (cdr table) table-f))))))
 ;post: returns the value associated with name if it is found in table. if it does not exist, calls the table-f function.
 
 
@@ -351,12 +401,9 @@
 ;; ===========================================================================
 
 ;pre: this takes two? three? arguments. names, values, and build-f (an error function). FIX THIS PRE CONDITION!
-(define (build names values build-f)
-  (cond
-    ((not (check-set names)) (build-f "Names error. Names cannot have duplicates"))
-    ((not (check-equal-len-list names values)) (build-f "Value error. Names and value must be equal length"))
-    (else
-     (list names values))))
+(define build  list)
+(define new-entry build)   ;; ← simple alias, no behavioural change
+
 ;post: returns an entry if names has no duplicates and names and values are of equal length. otherwise, returns
 ;the appropriate error message. 
 
@@ -383,18 +430,12 @@
 ; we use action functions. We have atom-to-action, expression-to-action, and list-to-action. 
 ;; ============================================================================
 
-; TLS DOES SOMETHING SNEAKY. THEY HAVE ANOTHER BUILD FUNCTION. THIS IS FOR PRIMITIVES. AND THIS IS NEEDED
-; IF WE WANT TO TEST THE expression-to-action function.
-(define (build-for-prims tag value)
-  (list tag value))
+(define (primitive? fun)
+  (and (pair? fun) (eq? (first fun) 'primitive)))
 
 
-(define (primitive? l)
-  (eq? (first l) 'primitive))
-
-
-(define (non-primitive? l)
-  (eq? (first l) 'non-primitive))
+(define (non-primitive? fun)
+  (and (pair? fun) (eq? (first fun) 'non-primitive)))
 
 
 ;Action for constants
@@ -404,124 +445,78 @@
      ((eq? e #t) #t)
      ((eq? e #f)#f)
      (else
-      (build-for-prims 'primitive e))))
+      (build 'primitive e))))
+
 
 ;Action for quote
 (define (*quote e table)
   (text-of e))
 
 
-(define text-of second)
-
-
-(define (value e)
-  (meaning e '()))
-
-
-(define (meaning e table)
-  ((expression-to-action e) e table))
-
-
 ;Action for identifier
 (define (*identifier e table)
-   (lookup-in-table e table initial-table))
-
-
-(define (initial-table name)
-  (car '()))
+  (lookup-in-table e table initial-table))
 
 
 ;Action for lambda
-(define (*lambda e table) 
-  (build('non-primitive)
-        (cons table (cdr e))))
+(define (*lambda e table)
+  (build 'non-primitive (cons table (cdr e))))
 
 
-(define table-of first)
-(define formals-of second)
-; need to write defeniton for third
-(define body-of third)
-
-
+;; evcon : list-of-cond-clauses table → value
 (define (evcon lines table)
-  (cond
-    ((else? (question-of (car lines)))
-     (meaning (answer-of (car lines)) table))
-    ((meaning (question-of (car lines)) table)
-     (meaning (answer-of (car lines)) table))
-    (else
-     (evcon (cdr lines) table))))
+  (cond ((else? (question-of (car lines))) (meaning (answer-of (car lines)) table))
+        ((meaning (question-of (car lines)) table)
+         (meaning (answer-of (car lines)) table))
+        (else (evcon (cdr lines) table))))
 
-
-(define (else? x)
-  (cond
-    ((atom? x) (eq? x 'else))
-    (else #f)))
-
-
-(define question-of first)
-(define answer-of second)
 
 
 ;Action for cond
 (define (*cond e table)
-  (evcon(cond-lines-of e) table))
+  (evcon (cond-lines-of e) table))
 
 
-(define cond-lines-of cdr)
-
-
+;Takes a list of arguments and a table, and then returns a list composed of the meaning
+;of each argument.
 (define (evlis args table)
-  (cond
-    ((null? args)('()))
-    (else
-     (cons (meaning (car args) table)
-           (evlis (cdr args) table)))))
+  (if (null? args)
+      '()
+      (cons (meaning (car args) table)
+            (evlis (cdr args) table))))
 
 
 ;Action for application
 (define (*application e table)
-   (apply
-    (meaning(function-of e ) table)
-    (evilis(arguments-of e) table)))
+  (tls-apply (meaning (function-of e) table)
+         (evlis (arguments-of e) table)))
 
 
-(define function-of car)
-(define arguments-of cdr)
-
-
-(define (applyi fun vals)
+;In TLS, the function was originally called "apply", but Scheme R5RS already has its built in apply,
+;so I made another one specifically called tls-apply.
+(define (tls-apply fun vals)
   (cond
-    ((primitive? fun)
-     (apply-primitive(second fun) vals))
-    ((non-primitive? fun)
-     (apply-closure
-      (second fun) vals))))
+    ((primitive? fun) (tls-apply-primitive (second fun) vals))
+    ((non-primitive? fun) (tls-apply-closure (second fun) vals))
+    (else
+     (error "tls-apply: not a function" fun))))
 
 
-(define apply-primitive
-  (lambda (name vals)
-    (cond
-      ((eq? name 'cons)
-       (cons (first vals) (second vals)))
-      ((eq? name 'car)
-       (car (first vals)))
-      ((eq? name 'cdr)
-       (cdr (first vals)))
-      ((eq? name 'null?)
-       (null? (first vals)))
-      ((eq? name 'eq?)
-       (eq? (first vals) (second vals)))
-      ((eq? name 'atom?)
-       (atom? (first vals)))
-      ((eq? name 'zero?)
-       (zero? (first vals)))
-      ((eq? name 'add1)
-       (add1 (first vals)))
-      ((eq? name 'sub1)
-       (sub1 (first vals)))
-      ((eq? name 'number?)
-       (number? (first vals))))))
+(define (tls-apply-primitive name vals)
+  (cond
+    ((eq? name '+) (apply + vals))
+    ((eq? name 'cons) (cons (first vals) (second vals)))
+    ((eq? name 'car) (car (first vals)))
+    ((eq? name 'cdr) (cdr (first vals)))
+    ((eq? name 'null?) (null? (first vals)))
+    ((eq? name 'eq?) (eq? (first vals) (second vals)))
+    ((eq? name 'atom?) (atom? (first vals)))
+    ((eq? name 'zero?) (zero? (first vals)))
+    ((eq? name 'add1) (+ (first vals) 1))
+    ((eq? name 'sub1) (- (first vals) 1))
+    ((eq? name 'number?) (number? (first vals)))
+    (else
+     (error "unknown primitive" name))))
 
 
 (define :atom?
@@ -534,13 +529,13 @@
      (else #f))))
 
 
-(define (apply-closure closure vals)
-  (meaning (body-of closure)
-           (extend-table
-            (new-entry
-             (formals-of closure)
-             vals)
-            (table-of closure))))
+(define (tls-apply-closure closure vals)
+  (let*
+      ((saved (first closure))
+       (formals (second closure))
+       (body (third  closure))
+       (new-env (extend-table formals vals saved)))
+    (meaning body new-env)))
   
 
 
@@ -550,21 +545,8 @@
 ;; ===========================================================================
 (define (atom-to-action e)
   (cond
-     ((number? e) *const)
-     ((eq? e #t)  *const)
-     ((eq? e #f)  *const)
-     ((eq? e 'cons) *const)
-     ((eq? e 'car)  *const)
-     ((eq? e 'cdr)  *const)
-     ((eq? e 'null?) *const)
-     ((eq? e 'eq?)   *const)
-     ((eq? e 'atom?) *const)
-     ((eq? e 'zero?) *const)
-     ((eq? e 'add1)  *const)
-     ((eq? e 'sub1)  *const)
-     ((eq? e 'number?) *const)
-     (else *identifier)))
-
+    ((const-atom? e) *const)
+    (else *identifier)))
 
 
 
@@ -578,12 +560,11 @@
   (cond
     ((atom? (car e))
      (cond
-       ((eq? (car e) 'quote) *quote)
+       ((eq? (car e) 'quote)  *quote)
        ((eq? (car e) 'lambda) *lambda)
-       ((eq? (car e) 'cond) *cond)
+       ((eq? (car e) 'cond)   *cond)
        (else *application)))
     (else *application)))
-
 
 
 
@@ -593,10 +574,9 @@
 ; two can be considered helper functions that do all of the work. 
 ;; ===========================================================================
 (define (expression-to-action e)
-  (cond
-    ((atom? e)(atom-to-action e))
-    (else
-     (list-to-action e))))
+  (if (atom? e)
+      (atom-to-action e)
+      (list-to-action e)))
 
 
 ;Testing the function. I think these are all correct, not sure though.
