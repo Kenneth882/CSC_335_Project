@@ -107,6 +107,12 @@
 ; 8-16) value, meaning, *const, *quote, *identifier, *lambda, *application, *evcon, *else
 ; 17-22) primitive?, non-primitive?, apply, apply-primitive, atom?, apply-closure
 
+
+;4/12-Kenneth(Comments Below)
+; 1.1 is basicly a translation of TLS from TLS language into R5RS. I do notice that some functions from the book are repeated so i think the outline
+; for the interpreter would be to get the simple functions and helpers out of the way first, that way we can keep refering to them and avoid redundent code.
+;Initially i wll focus on just pure translation and then after everything is translated I will focus on connecting the important components
+
 ;4/13/25 - Alexis (Comments Below)
 ;1.1 of the project is based on TLS chapter 10. The implementations of the the function.
 ;One of the important things I have noticed are most functions are tail recursive (lookup-in-entry-helper, lookup,entry, etc.)
@@ -133,6 +139,10 @@
 ; first creating the basic helper functions, the ones that are in the chapter and commonly used in TLS and then we went through the list one
 ; by one and made the functions. 
 
+;4/14-Kenneth(Commments Below)
+;I implememnted most of TLS straight from the book, some of the functions still need to be linked.Most of the test cases that i did work with the function
+; on its own, however there are certain functions that connect that have some logical errors to them, so we will hopfully work on fixxing that. Since TLS
+;had some repeated functions that did diffrent things we still have to clean and fix that so that each function can past every test case.
 
 
 ; 4/16/25 - Hamim (Comments Below)
@@ -144,6 +154,13 @@
 
 ; 4/17/25 - Hamim (Comments Below)
 ;Action functions.
+
+;4/19-Kenneth (Comments Below)
+
+;Started on the Syntax checker for TLS.Since we have a lot of functions for TLS I decided to have two refrences, conditons and special conditions
+;Conditions will be all the operations that can be easily checked such as some of the built in operations and some primitives. Since some
+;operations will be more complex like lambada where we will probably have to reccur to check all the other operations inside it we can always refer
+;to the condtions to show if the arguments inside them follow the correct format.
 
 
 ; 4/28/25 - Alexis (Comments Below)
@@ -163,9 +180,19 @@
 ; were also incorrect.
 
 
+;4/29-Kenneth(Comments Below)
+;After My inital layout of the syntax checker i realized that some of the Design was not correct. We dont really need a special-checker since
+;each of the functions like lambda,cond,if ect does its own unique thing so refering to that would be redundant.I'm still not finished with it but most of the
+;basic operations are done.The specific TLS functions still need to be checked and also need to work on showing specific
+;error messages instead of just outputting false.
+
+
 ;4/30/25 - Hamim (Comments Below)
 ;Cleaning up code, making sure test cases all run. In order to make the output look nicer, I added two (newline) so it is easier to see the output and what
 ;section of code corresponds to what.
+
+
+
 
 
 ; Now how do we approach this? In chapter 10 of the book we have some functions written completely and we just need to convert that to R5RS,
