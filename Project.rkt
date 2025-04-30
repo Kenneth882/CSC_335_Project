@@ -108,6 +108,10 @@
 ; 8-16) value, meaning, *const, *quote, *identifier, *lambda, *application, *evcon, *else
 ; 17-22) primitive?, non-primitive?, apply, apply-primitive, atom?, apply-closure
 
+
+
+
+
 ; Now how do we approach this? In chapter 10 of the book we have some functions written completely and we just need to convert that to R5RS,
 ; and some do not. Kenneth already began to create the basic helper functions and write the functions in Scheme (4/14/25). We started off by
 ; first creating the basic helper functions, the ones that are in the chapter and commonly used in TLS and then we went through the list one
