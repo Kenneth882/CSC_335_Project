@@ -94,6 +94,18 @@
 
 ;COMMENTS FOR US: Put any ideas or what you plan to work on/improve or if stuck on something.
 ;; ============================================================================
+; 4/14/25 - Hamim (Comments Below)
+; So 1.1 of the project is telling us to make the functions in chapter 10 of the book ourselves, in R5RS scheme. The functions that they have
+; are
+; 1) lookup-in-entry (this takes two arguments, name and entry)
+; 2) lookup-in-entry-helper (this is the helper function for #1. This is used when name is not found in the first list of an entry)
+; 3) extend-table (this is like cons)
+; 4) lookup-in-table (takes three arguments, name, table, and table-f)
+; 5) expression-to-action (this produces the correct function for each possible S-expression. action == function)
+; 6) atom-to-action
+; 7) list-to-action
+; 8-16) value, meaning, *const, *quote, *identifier, *lambda, *application, *evcon, *else
+; 17-22) primitive?, non-primitive?, apply, apply-primitive, atom?, apply-closure
 
 ;4/13/25 - Alexis (Comments Below)
 ;1.1 of the project is based on TLS chapter 10. The implementations of the the function.
@@ -156,6 +168,11 @@
 ;section of code corresponds to what.
 
 
+; Now how do we approach this? In chapter 10 of the book we have some functions written completely and we just need to convert that to R5RS,
+; and some do not. Kenneth already began to create the basic helper functions and write the functions in Scheme (4/14/25). We started off by
+; first creating the basic helper functions, the ones that are in the chapter and commonly used in TLS and then we went through the list one
+; by one and made the functions. 
+
 
 
 
@@ -164,6 +181,7 @@
 ; Or they are functions that have been translated to R5RS Scheme.
 ; Also included in this section are functions from TLS that we will use for our
 ; more complex functions, like action-to-action, action-to-list, etc.
+
 ;; ============================================================================
 
 ; This is the atom function which will check when an element is an atom and saves us from
@@ -197,8 +215,10 @@
 (define second cadr)
 
 
+
 ;In TLS third refers to caddr
 (define third caddr)
+
 
 
 ;In TLS, this is the else? function
@@ -214,6 +234,7 @@
 (define answer-of second)
 
 
+
 ;In TLS, this gives the cdr of a cond
 (define cond-lines-of cdr)
 
@@ -224,6 +245,7 @@
 
 ;In TLS, this extracts the cdr of an application
 (define arguments-of cdr)
+
 
 
 ;In TLS, this returns the data inside a quote
@@ -299,6 +321,7 @@
 ;nyp: the remaining tables
 
 
+
 (define (lookup-in-entry name entry entry-f)
   (let loop
     ((names (first entry))
@@ -315,6 +338,7 @@
 ; (lookup-in-entry 'x entry (lambda (name) 'not-found-in-entry)) ;returns 1
 ; (lookup-in-entry 'a entry (lambda (name) 'not-found-in-entry)) ;returns not-found-in-entry
 ; (lookup-in-entry 'entree '((appetizer entree beverage) (ar luka lebron)) (lambda (name) 'not-found)) ;returns luka
+
 
 
 
@@ -345,8 +369,6 @@
 ; (lookup-in-table 'snacks table (lambda (name) 'not-found)) ;returns not-found
 
 
-
-            
 
 
 
@@ -689,6 +711,7 @@
 
 
 
+
 ;test cases from professor. these were posted on MS Teams.
 (value '((lambda (x) (add1 x)) 3))
 ;this returns 4
@@ -738,3 +761,4 @@
               (lambda (y) (cons x y))))
          2))
 ;this returns (2 2 . 3)
+
