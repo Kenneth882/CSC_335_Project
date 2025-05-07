@@ -102,33 +102,19 @@
 ;pre condition: expr is an expressions
 ( define (syntax-checker expr env)
    (cond
-     ;The following will be the base cases
-     ;This is for the constants
-    ((constant? expr) #t)
-    ;This is for Varibles
-    ((symbol? expr)(var? expr env))
+    ((constant? expr) 'ok )
     
-    ((and (pair? expr) (eq? (car expr) 'quote))
-     (and (= (length expr) 2)))
-    
-    ;This is used for simiple arethmetic like + - * and /
-   ((and(pair? expr)(member? (car expr) primitive-names))
-    (and(conditions(first expr)(cdr expr))
-        (check-args(cdr expr) env)))
-
-   ;This is used to check the If statement
-   ((and(pair? expr)(eq?(car expr) 'if))
-       (check-if expr env))
-   
-
-;This will be used to check the and statment and the or statment
-   ((and(pair? expr)(or(eq?(car expr) 'and)(eq?(car expr) 'or))
-    (check-and-or expr env)))
-
-   ((and(pair? expr)(eq?(car expr) 'lambda))
-    (check-lambda expr env))
-
- (else #f )))
+    ((symbol? expr)(if (var? expr env)
+                       'ok
+                       (error'check "unbound varible: ~a" expr)))
+  ((pair? expr)
+     (let ((op (car expr)))
+       (cond ((eq? op 'if)      (check-if     expr env))
+             ((eq? op 'cond)    (check-cond   expr env))
+             ((eq? op 'lambda)  (check-lambda expr env))
+             ((memq op '(and or))(check-and-or expr env))
+             (else              (check-application expr env)))))
+    (else (error 'check "ill‐formed expression: ~a" expr))))
 
 
 
@@ -210,7 +196,56 @@
       (is-symbol?(cadr expr))  
       (not(duplicates?(cadr expr))) ;Duplicates was implemented earlier in the program and is used to prevent bad syntax like (lambda( x  x))
       (syntax-checker(caddr expr) ; this checks the body
-                     (append(cadr expr) env)))) 
+                     (append(cadr expr) env))))
+
+
+
+
+
+
+
+
+
+
+
+(define primitive-arity
+  '((car 1) (cdr 1) (cons 2) (null? 1) (pair? 1) (list? #f) (equal? #f) (atom? 1) (not 1)
+    (+ #f) (- #f) (* #f) (/ #f) (= #f) (< #f) (<= #f) (>= #f) (> #f)
+    (symbol? 1) (number? 1) (boolean? 1) (procedure? 1) (zero? 1)
+    (add1 1) (sub1 1) (first 1) (second 1) (third 1)))
+
+(define (legal-arity? fname n)
+  (let ((entry (assoc fname primitive-arity)))
+    (if entry
+        (let ((allowed (cdr entry)))
+          (if (eq? (car allowed) #f)
+              #t
+              (member n allowed)))
+        #f)))
+
+(define (check-application expr env)
+  (let* ((op (car expr))
+         (args (cdr expr))
+         (n (length args)))
+    (if (symbol? op)
+        (cond
+          ((member op primitive-names)
+           (if (legal-arity? op n)
+               (begin
+                 (for-each (lambda (e) (syntax-checker e env)) args)
+                 'ok)
+               (error "wrong number of arguments" op)))
+          ((var? op env)
+           (begin
+             (for-each (lambda (e) (syntax-checker e env)) args)
+             'ok))
+          (else
+           (error "unbound variable" op)))
+        (begin
+          (syntax-checker op env)
+          (for-each (lambda (e) (syntax-checker e env)) args)
+          'ok))))
+
 
 
 
@@ -248,5 +283,50 @@
 ;Cond is a very powerful function.
 ;Since cond is a special form it follows it's own rules meaning we will probably have to do a checker for cond as well.
 
-;get back to this function later
-;(define (check-cond expr env))
+(define (check-cond expr env)
+  (let ((clauses (cdr expr)))
+    (if (null? clauses)
+        (error "cond with no clauses")
+        (let loop ((rest clauses)        
+                   (seen-else #f))       
+          (if (null? rest)              
+              'ok
+              (let* ((clause (car rest))
+                     (first  (if (pair? clause) (car clause) #f)))
+              
+                (if (not (pair? clause))
+                    (error "cond clause is not a list" clause)
+                    (cond
+                    
+                      ((eq? first 'else)
+                       (if seen-else
+                           (error "multiple else clauses in cond")
+                           (let ((bodies (cdr clause)))
+                             (if (null? bodies)
+                                 (error "else clause has no body")
+                                 (begin
+                                  
+                                   (for-each (lambda (e)
+                                               (syntax-checker e env))
+                                             bodies)
+                                  
+                                   (if (null? (cdr rest))
+                                       'ok
+                                       (error "else must be the last cond clause")))))))
+                     
+                      ((and (= (length clause) 3)
+                            (eq? (cadr clause) '=>))
+                       (syntax-checker (car clause) env)   
+                       (syntax-checker (caddr clause) env) 
+                       (loop (cdr rest) seen-else))
+                   
+                      (else
+                       (syntax-checker (car clause) env)  
+                       (for-each (lambda (e)
+                                   (syntax-checker e env))
+                                 (cdr clause))
+                       (loop (cdr rest) seen-else))))))))))
+
+ 
+                        
+  

@@ -214,6 +214,284 @@
 
 
 
+;1.3
+;------------------------------------------------------------------------------------------------------
+
+;this is our approach to 1.3 and 1.4
+;first off 1.3 asks:
+
+;; 1.3 After giving a specification for the environment subsystem of TLS, prove that your implementation
+;;     satisfies this specification.  Then change the representation of environemnts to use lists of
+;;     bindings rather than the names-values pairs shown in the text, and show that the altered
+;;     representation both satisfies your specification and works with the rest of the interpreter.
+
+;So first we must give a spec for the enviorment subsystem in TLS and then we have to prove that
+; our implementation fufills that specification.
+
+;Right now our enviorment consists of the table which serves as a list of entries where each entry is the two-list structure
+;consisting of names and vals
+
+;we have the lookup-in-table function which reccursivly scans that list to find a binding
+
+; and we have extend-table which pushes a new element onto the head of the list.
+
+;PROOFS on our functions
+
+
+
+
+;changing the representation of environemnts to use lists of bindings rather than the names-values pairs
+;SO far our implementation consists of name value pairs in the enviorment tables,
+;our enviorment tables are assosicated with this as the values get stored in the tables like
+;(( x y z)( 1 2 3))
+;in code:
+
+;(define entry '((x y z) (1 2 3)))
+;(lookup-in-entry 'x entry (lambda (name) 'not-found-in-entry)) ; → 1
+
+;in this case the value x is binded to 1 and if we change x to y
+;(lookup-in-entry 'y entry (lambda (name) 'not-found-in-entry)) ; → 2
+;so right now our elements are binded to one another using the name value pair
+
+;For applying functions we have the extend table  for closure which creates a
+;new name value mapping of the parameters in formals to the arguments in vals.
+
+;so if formals are (x y) and vals are (5 6) then we would just get
+
+;x -> 5
+;y -> 6
+
+;when we also test using value using the code as an example:
+;(value '((lambda (x) (add1 x)) 3)) ; => 4
+; we in result would get an enviorment containing (x . 3)
+
+;So thats what we have so far,so our goal now is to turn that from name-value paris into
+; something that uses list of bindings.
+
+;In order to do this we would have to implement some of the enviorment attributes
+;that we learned about in eopl.
+
+;In eopl there are 4 important function enviormiorments
+;We have empty-env,extend-env,extend-env*, and apply env
+
+
+
+;PROOF AND SPECS
+
+;empty-env: Langauge: -> Env
+     ;empty-env is a constructor that returns the emprty enviorment
+
+;extend-env: Language : Sym x Val X Env -> Env
+; extend-env adds one binding(name,value)
+
+;extend-env* :Language: (List sym) X( List val) x env -> Env
+;extend-env adds *n* parallel bindings into the enviorment
+
+;apply-env: Language: Env x Sym -> Val
+;Looks up the name in the env, raises an error if unbound
+
+;NEED TO WORK ON PROOFS
+
+
+( define empty-env '())
+
+(define (extend-env name val env) 
+  (cons (list name val) env))
+
+(define (extend-env* names vals env)
+  (if (null? names)
+      env
+      (extend-env* (cdr names)
+                   (cdr vals)
+                   (extend-env (car names) (car vals) env))))
+
+(define(apply-env env name)
+  (cond ((null? env)
+         (error 'apply env(format "unbound identifier: ~a" name))) 
+        ((eq? name (car(car env)))
+         (cadr(car env)))
+        (else
+         (apply-env(cdr env) name))))
+
+;Since we already proved the specs all that we now need to do is to apply our new enviorment
+;to our TLS interpreter which we can do by simply changing our previous extend table since all
+;our functions call back to it
+
+
+
+;(define (extend-table formals vals table)
+  ;(cons (build formals vals) table))
+;we would change the extend-table into
+
+(define (extend-table formals vals table)
+  (extend-env* formals vals table))
+
+;previously we were using cons but now with our extend-env* we can simply call it and it would
+; do all the work and avoid the name value pair that cons has.
+
+;However since we changed our representation from (x y z) ( 1 2 3) to ( x 1) (y 2) ( z 3) we have to change our helper functions to meet these requirments and to sustain the
+;list bindings
+
+;Here are the functions that we changed so that our program is compatible with the new extend-table
+
+;Firstly we got rid of the lookup-in-entry and also the lookup-in-table functions.
+;This is because it was following the name values defeniton and it would work with
+;(define (extend-table formals vals table)
+  ;(cons (build formals vals) table))
+;however since we now have a list binding due to our extend-env* being in the extend-table function there really is not use
+;for those specific table lookup functions
+
+;we also had to edit the
+;;; (define (*identifier e table)
+;;   (lookup-in-table e table initial-table)) since it refered to the lookup-in-table function which we got rid of
+
+; we replaced it with
+
+;(define (*identifier e table)
+  ;(apply-env table e))
+
+;testing the functions:
+;(value '((lambda (x) (add1 x)) 3))           ; ⇒ 4
+;(value '(((lambda (y) (lambda (x) (cons x y))) 3) 4)) ; ⇒ (4 . 3)
+
+
+;Overall analysis and conclusion
+;How did alterning our lookup enviorment and enviorment in general ensure that our enviorments represent list bindings?
+
+;Initally with our pure TLS translation our entry was two parallel lists with a name and value relatshonship
+;it worked a little bit like a hash map/hash table however you may call it.
+;Lookup table would grab an entry then would find the postion of the name and return the matching value.
+; so our table consisted of a list of entries which relied on two diffrent lists
+
+;After the implementation of a new enviorment our program followed the binding model which eliminates
+; the need for the name value relatshonship making the table a list of bindings
+;This required all our identifiers to go through apply-env which susbstituted for lookup-in-entry and lookup-in-table.
+;Once that is updated we then had to change extend-table to match our new enviorment and that required the use of extend-env* which
+;instead of forming a name value pair, it pushed bindings for every actual pair so instead of (x y z)( 1 2 3) extend-env* would
+;do ( x 1), ( y 2), ( z 3)
+
+
+
+;some more tests(RUN IN terminal or bottom of page, Just quick tests to show interperter still works after the changes)
+;(equal? (value '((lambda (x) (add1 x)) 4)) 5) ; #t
+
+;(equal? (value '((lambda (x y) (cons y x)) 1 2)) '(2 . 1)) ; #t
+
+;(equal? (value '(((lambda (x) (lambda (y) (cons x y))) 2) 3)) '(2 . 3)) ; #t
+
+;(equal? (value '((lambda (x y z) (cons x (cons y (cons z '())))) 1 2 3)) '(1 2 3)) ; #t
+;(equal? 1 2)
+
+;(equal? (value '((lambda (x) (add1 x)) 4)) 6)
+
+
+
+
+;1.4 Lexical scope
+;---------------------------------------------------------------------------------------------------------
+
+;1.4 of the project is asking us to research closure and lexical scope and prove that our implementation
+; of TLS implements them correctly.
+;We then have to prove this via structural induction
+
+;The first part of the assigment is for backround and asking us to research what exactly lexical scoping is
+;Throught our findings and research of lexical scope, it seemed like it always would be compared to
+;dynamic scoping.To eliminte confusion we dove into the diffrences between the two.
+
+
+;Dynamic scoping is usally reffered as a stack like structure where the varible pushed is whats first in the scope/ innermost function.So the most recent bound varible
+;is what is used even if the varible was defined in a diffrent scope.So the most recent varible determines the value of it at run time
+
+; so like as example if we have
+;(define y 10)
+;(define (h) y)
+
+;(define (ad)
+   ;(let((y 20))
+       ;( h)))  
+;(ad)
+
+;In both lexical scope and dynamic scope h refers to y, however in dynamic scope becuase its a stack like structre the most recent varible of y which in this case is 20
+; would be used so at run time our value would be 20.
+
+;Lexical scoping is when we determine the varible at compile time rather thean run time. Instead of a stack the varible
+; we refer to is based on our static structure of the code.So in the example above when we look at the function ad,
+; we do set the local y to 20, however h refers back to the defention of y when its 10 since it looks at the structure rather than a stack.
+
+
+;Now that we've explained the key differences between lexical and dynamic scoping we are going to go more in depth in explaining lexical scope.
+
+;However before we explain Lexical scope we should define its relationship with closures
+
+;Important defenitons:
+
+;Bound-Occurance: a bound occurance is when a varible sits inside the scope that it introduces it in.Bound has a binding right there
+;Free occurance:  a varible that is not introduced locally and not bound by an local bindings. Free to look outside the local scope
+;Unbound occurance: a varible that is undefined. Unbound is owned by no one.
+
+;What is a closure?
+
+;a closure is the run time value profuced when a function is created inside some lexical enviorment
+
+;The closure usually consists of two parts, the code and the enviorment. The code consists of the functions
+;parameter list and body while the enviorment has like a "stored memory" of bindings that were visible where the location was defined which
+;; as defined eariler is a free varible. In our case our functions can have acess to other varibles on the outside due to closure
+;and multiple closures created in the same lexical scope will reffer to its own copy of our defined enviorment.
+
+
+
+
+;What exactly is lexical scoping?
+;An items lexical scope is the place in which it was created.
+;Some varibles can be delacred within a specific scope and are only accesible withing that reigon.
+;Lexical Scope refers to the ability of a function scope to acess varibles from its parent scope so
+; when there is a lexical scope innermost, inner and outermost functions may access all the varibles from
+;their parent scopes all the way up to the global scope.
+;However one key detail is that a scope cannot acess varibles from functions defined inside of it,
+;so the childs function is lexically bound to the parents function.
+
+
+;How does our code demonstrate that it is lexically scoped?
+
+
+;(define (*lambda e table)
+ ; (build 'non-primitive (cons table (cdr e))))
+
+
+;;(define (tls-apply-closure closure vals)
+  ;(let*
+      ;((saved (first closure))
+      ; (formals (second closure))
+       ;(body (third  closure))
+       ;(new-env (extend-table formals vals saved)))
+  ;  (meaning body new-env)))
+
+
+
+;(define (*identifier e table) 
+;  (apply-env table e) )      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ; BASIC HELPER FUNCTIONS. These are basic functions such as atom?, add1, etc.
@@ -316,8 +594,7 @@
 ;This makes a new table. It takes formal parameters, values, and the current table. And then
 ;using (define new-entry build), it creates a new entry and then adds it to the front.
 (define (extend-table formals vals table)
-  (cons (build formals vals) table))
-
+  (extend-env* formals vals table))
 
 ;This is a really important function, possibly one of the most important ones. This just evaluates everything.
 ;A lot of the test cases in the book and from Professor Troeger use this for test cases.
@@ -361,16 +638,16 @@
 
 
 
-(define (lookup-in-entry name entry entry-f)
-  (let loop
-    ((names (first entry))
-     (values (second entry)))
+;(define (lookup-in-entry name entry entry-f) 
+ ; (let loop
+   ; ((names (first entry))
+     ;(values (second entry)))
     
-    (cond
-      ((null? names) (entry-f name))
-      ((eq? (car names) name) (car values))
-      (else
-       (loop (cdr names) (cdr values))))))
+    ;(cond
+     ; ((null? names) (entry-f name))
+     ; ((eq? (car names) name) (car values)) 
+      ;(else
+       ;(loop (cdr names) (cdr values))))))
 
 ; Testing the function
 ; (define entry '((x y z) (1 2 3)))
@@ -388,12 +665,12 @@
 ;; ===========================================================================
 ;pre/specs: this takes three arguments, name (what we are looking for), table (it is a list of entries),
 ; and table-f (an error function if name is not found)
-(define (lookup-in-table name table table-f)
-   (cond
-     ((null? table)(table-f name))
-     (else
-      (lookup-in-entry name (car table)
-                       (lambda (name) (lookup-in-table name (cdr table) table-f))))))
+;(define (lookup-in-table name table table-f)
+  ; (cond
+     ;((null? table)(table-f name))
+     ;(else
+      ;(lookup-in-entry name (car table)
+                       ;(lambda (name) (lookup-in-table name (cdr table) table-f))))))
 ;post: returns the value associated with name if it is found in table. if it does not exist, calls the table-f function.
 
 
@@ -405,7 +682,7 @@
 ; (lookup-in-table 'entree table (lambda (name) 'not-found)) ;returns spaghetti
 ; (lookup-in-table 'dessert table (lambda (name) 'not-found)) ;returns spumoni
 ; (lookup-in-table 'appetizer table (lambda (name) 'not-found)) ;returns food
-; (lookup-in-table 'snacks table (lambda (name) 'not-found)) ;returns not-found
+; (lookup-in-table 'snacks table (lambda (name) 'not-found)) ;returns not-found 
 
 
 
@@ -452,7 +729,7 @@
 ;; ===========================================================================
 
 ;pre: list1 and list2 are lists
-(define (check-equal-len-list list1 list2)
+(define (check-equal-len-list list1 list2) 
   (cond
     ((and (null? list1) (null? list2)) #t)
     ((or (null? list1) (null? list2)) #f)
@@ -531,13 +808,16 @@
 
 
 ;Action for identifier
+;(define (*identifier e table)
+  ;(lookup-in-table e table initial-table))
+;Changed after 1.3 to
 (define (*identifier e table)
-  (lookup-in-table e table initial-table))
+  (apply-env table e) )     
 
 
 ;Action for lambda
 (define (*lambda e table)
-  (build 'non-primitive (cons table (cdr e))))
+  (build 'non-primitive (cons table (cdr e)))) 
 
 
 ;; evcon : list-of-cond-clauses table → value
@@ -800,4 +1080,5 @@
               (lambda (y) (cons x y))))
          2))
 ;this returns (2 2 . 3)
+ 
 
