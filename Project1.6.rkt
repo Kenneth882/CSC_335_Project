@@ -43,5 +43,35 @@ and then R5RS would do the actual work and return 'a' (not actually return in qu
 #|
 Now in the focus of function calling and the mechanics for that. The TLS interpreter focuses a lot on closures while R5RS focuses on
 lambdas usually. The interpreter is responsible for breaking down expressions and it does it in a smart way. So if we have a lambda function
-in the interpreter, it builds a closure. A closure is a data structure and it has parameters, body, and an environment. 
+in the interpreter, it builds a closure. A closure is a data structure and it has parameters, body, and an environment.
+(define (tls-apply-closure closure vals)
+  (let*
+      ((saved (first closure))
+       (formals (second closure))
+       (body (third  closure))
+       (new-env (extend-table formals vals saved)))
+    (meaning body new-env)))
+
+Now this is the apply-closure function function in TLS, we called it tls-apply-function. So what this does is that it extracts the closure elements,
+the saved environment, the formal parameters, and the body. And then it makes a new environment by extending the environment and helps bound everything
+correctly here. After that, an important line is (meaning body new-env). What this does is evaluate the body. Now for a few examples of this, I'll cover
+examples with regular operators like +, *. And then TLS built in car, cdr, cons. And then TLS not built it, like append, reverse.
+1) (value '((lambda (x) (+ x 1)) 2)) 
+; The first step would be that TLS creates a closure, so (non-primitive current-env (x (+ x 1)))
+; The second step is to extend the environment with x=2
+; The third step is to evaluate `(+ x 1)` in the new environment
+; The fourth step is to compute the actual `+` operation.
+; Final answer is 3.
+
+
+2) (value '((lambda (x) (cons x '(1 2 3))) 'a))
+; The first step is to create a closure, so (non-primitive () (x) ((cons x '(1 2 3))))
+; The second step is to extend the environment, so x='a'
+; The third step is to evaulate and use the cons;
+; Final answer is (a 1 2 3)
+
+
+3) (value '((lambda (x) (append x '(1 2 3))) '(a b)))
+; ERROR. We will get an error message here because in the TLS Interpreter, append is not a primitive. However, it is a primitive in Scheme. Like in regular
+; R5RS, we can do (reverse '(1 2 3)) -> (3 2 1). 
 |#
