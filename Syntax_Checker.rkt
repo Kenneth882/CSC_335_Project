@@ -2,6 +2,16 @@
 ;this is refering to our filed called Project.rkt which contains our tls interpreter along with built in TLS primitives
 (load "Project.rkt")
 
+
+;Y COMB implementation needed.
+
+
+
+
+
+
+
+
 ;This will be the syntax checker for TLS
 
 ;Design idea for Inductive defeniton
