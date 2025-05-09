@@ -79,10 +79,6 @@ Case 4:(lambda (params) body)
 ;By IH: body is a simpler S-expression that evaluates correctly
 
 
-
-
-
-
 Case 5: (cond (qi ai) ... (else an))
 ;Each qi and ai are simpler S-exps
 ;The Interpreter then calls the function (*cond sexp table) → (evcon clauses table)
