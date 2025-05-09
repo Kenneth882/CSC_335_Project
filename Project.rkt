@@ -108,18 +108,18 @@
 ; 17-22) primitive?, non-primitive?, apply, apply-primitive, atom?, apply-closure
 
 
-;4/12-Kenneth(Comments Below)
+; 4/12-Kenneth(Comments Below)
 ; 1.1 is basicly a translation of TLS from TLS language into R5RS. I do notice that some functions from the book are repeated so i think the outline
 ; for the interpreter would be to get the simple functions and helpers out of the way first, that way we can keep refering to them and avoid redundent code.
-;Initially i wll focus on just pure translation and then after everything is translated I will focus on connecting the important components
+; Initially i wll focus on just pure translation and then after everything is translated I will focus on connecting the important components
 
-;4/13/25 - Alexis (Comments Below)
-;1.1 of the project is based on TLS chapter 10. The implementations of the the function.
-;One of the important things I have noticed are most functions are tail recursive (lookup-in-entry-helper, lookup,entry, etc.)
-;This will be crucial for the proofs required from 1.5 so for now I have made a seperate file containing the proofs. 
-;Before jumping into the proofs kenneth proposed we finish building the interperter so for now the proofs are not needed. 
-;However, I labled each code with either T Recursion or Recursion so we will know in the future what proof will be needed
-;For each function.
+; 4/13/25 - Alexis (Comments Below)
+; 1.1 of the project is based on TLS chapter 10. The implementations of the the function.
+; One of the important things I have noticed are most functions are tail recursive (lookup-in-entry-helper, lookup,entry, etc.)
+; This will be crucial for the proofs required from 1.5 so for now I have made a seperate file containing the proofs. 
+; Before jumping into the proofs kenneth proposed we finish building the interperter so for now the proofs are not needed. 
+; However, I labled each code with either T Recursion or Recursion so we will know in the future what proof will be needed
+; for each function.
 
 
 ; 4/14/25 - Hamim (Comments Below)
@@ -139,12 +139,12 @@
 ; first creating the basic helper functions, the ones that are in the chapter and commonly used in TLS and then we went through the list one
 ; by one and made the functions. 
 
-;4/14-Kenneth(Commments Below)
-;I implememnted most of TLS straight from the book, some of the functions still need to be linked.Most of the test cases that i did work with the function
+; 4/14-Kenneth(Commments Below)
+; I implememnted most of TLS straight from the book, some of the functions still need to be linked.Most of the test cases that i did work with the function
 ; on its own, however there are certain functions that connect that have some logical errors to them, so we will hopfully work on fixing that. Since TLS
-;had some repeated functions that did diffrent things we still have to clean and fix that so that each function can past every test case.
+; had some repeated functions that did diffrent things we still have to clean and fix that so that each function can past every test case.
 
-;4/14-Alexis(Comments Below)
+; 4/14-Alexis(Comments Below)
 ; I reviewed the code Kenneth implemented and fixed some errors, and added some of the basic functions from the book TLS. 
 ; Kenneth explained the outline and how some of the functions are repeated and some of the logic in TLS is flawed.
 
@@ -157,14 +157,13 @@
 
 
 ; 4/17/25 - Hamim (Comments Below)
-;Action functions.
+; Action functions.
 
-;4/19-Kenneth (Comments Below)
-
-;Started on the Syntax checker for TLS.Since we have a lot of functions for TLS I decided to have two refrences, conditons and special conditions
-;Conditions will be all the operations that can be easily checked such as some of the built in operations and some primitives. Since some
-;operations will be more complex like lambada where we will probably have to reccur to check all the other operations inside it we can always refer
-;to the condtions to show if the arguments inside them follow the correct format.
+; 4/19-Kenneth (Comments Below)
+; Started on the Syntax checker for TLS.Since we have a lot of functions for TLS I decided to have two refrences, conditons and special conditions
+; Conditions will be all the operations that can be easily checked such as some of the built in operations and some primitives. Since some
+; operations will be more complex like lambada where we will probably have to reccur to check all the other operations inside it we can always refer
+; to the condtions to show if the arguments inside them follow the correct format.
 
 
 ; 4/28/25 - Alexis (Comments Below)
@@ -175,7 +174,7 @@
 ; I also implemented functions such as member?, duplicates, check-cond(not fully done), and error messages.
 
 
-;4/29/25 - Hamim (Comments Below)
+; 4/29/25 - Hamim (Comments Below)
 ; Adding on to Alexis's comments. Yes, there were errors when certain test cases were run. These errors were annoying because it let to the same few
 ; functions. And those functions were linked to other functions. It was like a loop of errors in a sense. There were two main issues. My build function,
 ; the apply function, and the primitive and non-primitive functions. The root errors were 1) something was not a procedure, mcar errors, and mcdr errors.
@@ -184,27 +183,49 @@
 ; were also incorrect.
 
 
-;4/29-Kenneth(Comments Below)
-;After My inital layout of the syntax checker i realized that some of the Design was not correct. We dont really need a special-checker since
-;each of the functions like lambda,cond,if ect does its own unique thing so refering to that would be redundant.I'm still not finished with it but most of the
-;basic operations are done.The specific TLS functions still need to be checked and also need to work on showing specific
-;error messages instead of just outputting false.
+; 4/29-Kenneth(Comments Below)
+; After My inital layout of the syntax checker i realized that some of the Design was not correct. We dont really need a special-checker since
+; each of the functions like lambda,cond,if ect does its own unique thing so refering to that would be redundant.I'm still not finished with it but most of the
+; basic operations are done.The specific TLS functions still need to be checked and also need to work on showing specific
+; error messages instead of just outputting false.
 
-;4/29-Alexis (Comments Below)
+; 4/29-Alexis (Comments Below)
 ; I realized how complicated Cond is when it comes to this since I will need the helper functions made for expression. 
 ; Although And and other functions were made, I only used syntax-checker we made.
 ; I also added specs to my previous function kenneth and I made. 
 ; And finished more basic functions.
 
-;4/30/25 - Hamim (Comments Below)
-;Cleaning up code, making sure test cases all run. In order to make the output look nicer, I added two (newline) so it is easier to see the output and what
-;section of code corresponds to what.
+; 4/30/25 - Hamim (Comments Below)
+; Cleaning up code, making sure test cases all run. In order to make the output look nicer, I added two (newline) so it is easier to see the output and what
+; section of code corresponds to what.
 
 
-;4/30/25 - Alexis (Comments Below)
+; 4/30/25 - Alexis (Comments Below)
 ; I implemented some finishing touches to 1.1 for we can present the code to the professor tomorrow. 
 ; I also cleaned up 1.2 file and added some specs we missed. 
 ; Fixed some errors as well.
+
+
+; 5/8/25 - Hamim (Comments Below)
+; So today was the first day that I was able to work on this for a while because I had exams + projects for other classes. However, I spent all day today working on
+; two things. During our last interview (interview 1), professor told me to add more test cases and essentially make them more complex. That is what I did today, I
+; was able to add test cases for all functions and made sure that they were fairly complex. The second thing I completed was Section 1.6 of the project. I worked with
+; Alexis on this part.
+
+
+; 5/9/25 - Hamim (Comments Below)
+; Today's goal is to organize the interpreter so that the functions can all run (they all do, but it does not look organized). Also, today is fixing the specs, and adding
+; more specs to each function. Alexis will also be joining in doing some of the specs and the pre/post conditions, and proofs. 
+
+
+
+
+
+
+
+
+
+
 
 
 ; Now how do we approach this? In chapter 10 of the book we have some functions written completely and we just need to convert that to R5RS,
@@ -299,6 +320,8 @@
 ;In TLS, this returns the caddr
 (define body-of third)
 
+
+;This is a custom error message that we have made.
 (define (error msg arg)
   (display "ERROR: ") (display msg) (display " ") (display arg) (newline))
 
@@ -306,6 +329,9 @@
 ;Not in TLS, but defined this because it is easier to do rather than type out constantly,
 ;This returns #t when an atom is a number, boolean, or primitive procedure. Or false otherwise.
 ; This is used to determine if an atom should be treated like a constant or a primitive procedure.
+
+;pre: takes one argument which can be any Scheme value
+;post: returns #t if the argument is a number, bool, one of the symbols in the list, or #f otherwise.
 (define (const-atom? a)
   (or (number? a)
       (eq? a #t)
@@ -313,7 +339,6 @@
       (if
        (memq a '(cons car cdr null? eq? atom? zero? add1 sub1 number?))
        #t #f)))
-
 
 ;Testing the Function const-atom?
 ; (const-atom? 'add1)                                 ;returns #t
@@ -329,22 +354,45 @@
 ; (const-atom? (if (number? 5) 'number 'not-number))  ;returns #f
 
 
+
+
+;===========================================================================================================
 ;This makes a new table. It takes formal parameters, values, and the current table. And then
 ;using (define new-entry build), it creates a new entry and then adds it to the front.
+
+;pre: takes three arguments, formals (parameter names), vals(list of corresponding values), and table(list of entries).
+;post: returns a new table with a new entry added to the front.
 (define (extend-table formals vals table)
   (cons (build formals vals) table))
+;===========================================================================================================
 
 
-;This is a really important function, possibly one of the most important ones. This just evaluates everything.
-;A lot of the test cases in the book and from Professor Troeger use this for test cases.
-(define (value e)
-  (meaning e '()))
 
 
+;===========================================================================================================
 ;Made because we assume that expression-to-action works. This evaluates the expression in a given
 ;environment.
+
+;pre: e is an expression that will be evaluated. table is the currend environment
+;post: returns the result of evaluating expression e in the table by using expression-to-action
 (define (meaning e table)
   ((expression-to-action e) e table))
+;===========================================================================================================
+
+
+
+
+;===========================================================================================================
+;This is a really important function, possibly one of the most important ones. This just evaluates everything.
+;A lot of the test cases in the book and from Professor Troeger use this for test cases.
+
+;pre: e is an expression that will be evaluated
+;post: returns the evaluated value of e 
+(define (value e)
+  (meaning e '()))
+;===========================================================================================================
+
+
 
 
 ;So this was a main reason why our code was not working. In TLS, it gives us initial-table. However, if we carefully
@@ -353,17 +401,14 @@
   (error "Unbound identifier" name))
 
 
-; There are certain functions that we do not need to make as they are already in Scheme. For example,
-; append, member?, and pair?.
 
 
 
 
 
-
-;; ===========================================================================
+;===========================================================================================================
 ; This is the lookup-in-entry function. Accompanied with it is the lookup-in-entry-helper.
-;; ===========================================================================
+;===========================================================================================================
 ;Design Idea:
 ;when looking up the entry there will be 3 possible cases, one where the name is found in entry, it will then return the associated value with the name.
 ;If it does not exist it will return the associated value once the entry-f is called.
@@ -376,7 +421,8 @@
 ;nyp: the remaining tables
 
 
-
+;pre: takes three arguments. name (the symbol to look up), entry(a list where we essentially do the searching), entry-f(error message).
+;post: if name is found in the list, it returns the corresponding value. if not found, it returns the error message.
 (define (lookup-in-entry name entry entry-f)
   (let loop
     ((names (first entry))
@@ -398,19 +444,17 @@
 
 
 
-;; ===========================================================================
+;===========================================================================================================
 ; This is the lookup-in-table function. 
-;; ===========================================================================
-;pre/specs: this takes three arguments, name (what we are looking for), table (it is a list of entries),
-; and table-f (an error function if name is not found)
+;===========================================================================================================
+;pre: takes three arguments, name (what we are looking for), table (list of entries), and table-f (an error message if name is not found)
+;;post: returns the value associated with name if it is found in table. if it does not exist, calls the table-f function.
 (define (lookup-in-table name table table-f)
    (cond
      ((null? table)(table-f name))
      (else
       (lookup-in-entry name (car table)
                        (lambda (name) (lookup-in-table name (cdr table) table-f))))))
-;post: returns the value associated with name if it is found in table. if it does not exist, calls the table-f function.
-
 
 ;Testing the function
 ; (define table '(((entree dessert)
@@ -441,31 +485,30 @@
 
 
 
-;; ============================================================================
+;===========================================================================================================
 ; TLS FUNCTIONS
 ; In TLS, it asks a crucial question, "How can we build an entry from a set of names and a list of values?"
 ; It then proceeds to tell us that we should try and build our examples with the function of
 ; (define new-entry build). And this is ultimately saying new-entry = build. So we need to make a build function.
-;; ============================================================================
+;===========================================================================================================
 
 
 
 
 
-;; ===========================================================================
+;===========================================================================================================
 ; This is the check-set function. It checks whether or not the list has duplicates.
 ; Sets cannot have duplicates.
-;; ===========================================================================
+;===========================================================================================================
 
 ;pre: list1 is a list
+;post: returns #t if list1 is a set and #f if it is not a set
 (define (check-set list1)
   (cond
     ((null? list1) #t)
     ((member (car list1) (cdr list1)) #f)
     (else
      (check-set (cdr list1)))))
-;post: returns #t if list1 is a set and #f if it is not a set
-
 
 ;Testing the function
 ; (check-set '())                                  ;returns #t
@@ -478,19 +521,18 @@
 
 
 
-;; ===========================================================================
+;===========================================================================================================
 ; This is the check-equal-len-list function. It checks whether two lists are of equal length. 
-;; ===========================================================================
+;===========================================================================================================
 
 ;pre: list1 and list2 are lists
+;post: returns #t or #f based on if the lists are of equal length or not
 (define (check-equal-len-list list1 list2)
   (cond
     ((and (null? list1) (null? list2)) #t)
     ((or (null? list1) (null? list2)) #f)
     (else
      (check-equal-len-list (cdr list1) (cdr list2)))))
-;post: returns #t or #f based on if the lists are of equal length or not
-
 
 ;Testing the function
 ; (check-equal-len-list '() '(1 2 3))                                ;returns #f
@@ -501,10 +543,10 @@
 
 
 
-;; ===========================================================================
+;===========================================================================================================
 ; This is the build function. It creates entry and validates that the names list has no dupes and
 ; the names list and values list are the same length. And then it returns the entry.
-;; ===========================================================================
+;===========================================================================================================
 
 ;pre: this takes two? three? arguments. names, values, and build-f (an error function). FIX THIS PRE CONDITION!
 (define build list)
@@ -529,14 +571,16 @@
 
 
 
-;; ============================================================================
+;===========================================================================================================
 ; Action Functions
 ; In chapter 10 of TLS, we once again meet the use of value. And value is the function that returns
 ; the natural value of expressions. After that, we then get introduced to the different action functions
 ; There are different types: *const, *quote, *identifier, *lambda, *cond, and *application. And to represent
 ; we use action functions. We have atom-to-action, expression-to-action, and list-to-action. 
-;; ============================================================================
+;===========================================================================================================
 
+;pre: takes one argument. fun (can be any Scheme value)
+;post: returns #t if fun is a pair whose first element is the symbol 'primitive and #f otherwise
 (define (primitive? fun)
   (and (pair? fun) (eq? (first fun) 'primitive)))
 
@@ -549,6 +593,9 @@
 
 
 
+
+;pre: takes one argument. fun (can be any Scheme value)
+;post: returns #t if fun is a pair whose first element is the symbol 'non-primitive and #f otherwise
 (define (non-primitive? fun)
   (and (pair? fun) (eq? (first fun) 'non-primitive)))
 
@@ -602,6 +649,7 @@
   (evcon (cond-lines-of e) table))
 
 
+
 ;; evcon : list-of-cond-clauses table → value
 (define (evcon lines table)
   (cond
@@ -610,7 +658,6 @@
      (meaning (answer-of (car lines)) table))
     (else
      (evcon (cdr lines) table))))
-
 
 
 
@@ -628,13 +675,21 @@
          (evlis (arguments-of e) table)))
 
 
+
+
 ; This is the TLS apply primitive. It essentially handles all of the primitives in the chapter
 ; where the interpreter was introduced.
+
+;pre: this takes two arguments. name (symbol representing the primitive op name). vals (a list of arguments).
+;post: applies the operation and then returns the result. if it is not recognized, we return an error.
 (define (tls-apply-primitive name vals)
   (cond
     ((eq? name '+) (apply + vals))
     ((eq? name 'cons) (cons (first vals) (second vals)))
-    ((eq? name 'car) (car (first vals)))
+    ((eq? name 'car)
+     (if (null? vals)
+     (error "primitive 'car' called with no arguments" name)
+     (car (first vals))))
     ((eq? name 'cdr) (cdr (first vals)))
     ((eq? name 'null?) (null? (first vals)))
     ((eq? name 'eq?) (eq? (first vals) (second vals)))
@@ -646,20 +701,36 @@
     (else
      (error "unknown primitive" name))))
 
+;Testing the function
+; (tls-apply-primitive '+ '(1 2 3))      ;6
+; (tls-apply-primitive 'cons '(1 (2 3))) ;(1 2 3)
+; (tls-apply-primitive 'car '((1 2 3)))  ;1
+; (tls-apply-primitive 'cdr '((1 2 3)))  ;(2 3)
+; (tls-apply-primitive 'null? '(()))     ;#t
+; (tls-apply-primitive 'unknown-op '(1 2)) ;error: unknown primitive unknown-op
+; (tls-apply-primitive 'car '())           ;ERROR: primitive 'car' called with no arguments car
+
+
+
 
 ;In TLS, the function was originally called "apply", but Scheme R5RS already has its built in apply,
 ;so I made another one specifically called tls-apply.
+
+;pre: takes two arguments. fun (value expected to be prim or non-prim. vals is a list of argument values
+;post: if fun is primitive, it applies tls-apply-primitive and returns. if non-primitive, applies closure and returns.
+;      else error message.
 (define (tls-apply fun vals)
   (cond
     ((primitive? fun) (tls-apply-primitive (cadr fun) vals))
     ((non-primitive? fun) (tls-apply-closure (cadr fun) vals))
-    (else (error "tls-apply: not a function" fun))))
+    (else (my-error "tls-apply: not a function" fun))))
 
 ;Tests for function
 ; (define primitive-fun '(primitive +))
 ; (tls-apply primitive-fun '(2 3))   ;returns 5
 ; (tls-apply 42 '(1 2))              ;ERROR: tls-apply: not a function 42
 ; (tls-apply primitive-fun '(1 10))  ;returns 11
+
 
 
 (define :atom?
@@ -672,6 +743,9 @@
      (else #f))))
 
 
+;pre: closure is a list with at least three elements: saved environment, formals list, and body expression;
+;      vals is a list of argument values.
+;post: extends saved environment with formals bound to vals, evaluates body in the new environment, and returns the result.
 (define (tls-apply-closure closure vals)
   (let*
       ((saved (first closure))
@@ -682,10 +756,13 @@
   
 
 
-;; ===========================================================================
+;===========================================================================================================
 ; This is the atom-to-action function. This was already given to us in TLS chapter 10. The purpose of this is
 ; to decide how to evaluate an expression. And returns the correct "action". 
-;; ===========================================================================
+;===========================================================================================================
+
+; pre: e is any Scheme value.
+; post: returns *const if e is a constant atom. else returns *identifier.
 (define (atom-to-action e)
   (cond
     ((const-atom? e) *const)
@@ -699,11 +776,17 @@
 (newline)
 
 
-;; ===========================================================================
+
+
+;===========================================================================================================
 ; This is the list-to-action function. This was also given in TLS. The purpose of this is to handle expressions
 ; that are not atoms, hence why we have quote, lambda, and cond as a comparison for our eq? and return it.
 ; Also deals with *application. 
-;; ===========================================================================
+;===========================================================================================================
+
+; pre: e is a non-empty list.
+; post: returns *quote if (car e) is 'quote; *lambda if 'lambda; *cond if 'cond; 
+;       else *application.
 (define (list-to-action e)
   (cond
     ((atom? (car e))
@@ -724,16 +807,18 @@
 
 
 
-;; ===========================================================================
+;===========================================================================================================
 ; This is the expression-to-action function. This was also given in TLS. The purpose of this can be thought of
 ; as the main function, it calls both of the two previous functions given what we have inputted. And then the other
 ; two can be considered helper functions that do all of the work. 
-;; ===========================================================================
+;===========================================================================================================
+
+; pre: e is any Scheme value.
+; post: returns atom-to-action e if e is an atom; otherwise returns list-to-action e.
 (define (expression-to-action e)
   (if (atom? e)
       (atom-to-action e)
       (list-to-action e)))
-
 
 ;Testing the function
 ; (expression-to-action '(quote hello))                           ;#<procedure:*quote>
@@ -765,12 +850,12 @@
 
 
 
-;; ============================================================================
+;===========================================================================================================
 ; Error Functions
 ; In chapter 10 of TLS, we get introduced to parameters within our function that ends in -f. For example, we
 ; have set-f, entry-f, table-f, etc, etc. These are known as error functions. Because we don't want to actually
 ; write an else clause and then an error message.
-;; ============================================================================
+;===========================================================================================================
 
 ;This is an error function set-f, which returns an error message if the input is not a set.
 (define (set-f)
