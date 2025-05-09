@@ -213,9 +213,6 @@
 ; by one and made the functions. 
 
 
-
-
-
 ; BASIC HELPER FUNCTIONS. These are basic functions such as atom?, add1, etc.
 ; Or they are functions that have been translated to R5RS Scheme.
 ; Also included in this section are functions from TLS that we will use for our
@@ -301,6 +298,9 @@
 
 ;In TLS, this returns the caddr
 (define body-of third)
+
+(define (error msg arg)
+  (display "ERROR: ") (display msg) (display " ") (display arg) (newline))
 
 
 ;Not in TLS, but defined this because it is easier to do rather than type out constantly,
@@ -597,6 +597,11 @@
   (build 'non-primitive (cons table (cdr e))))
 
 
+;Action for cond
+(define (*cond e table)
+  (evcon (cond-lines-of e) table))
+
+
 ;; evcon : list-of-cond-clauses table → value
 (define (evcon lines table)
   (cond
@@ -607,10 +612,6 @@
      (evcon (cdr lines) table))))
 
 
-
-;Action for cond
-(define (*cond e table)
-  (evcon (cond-lines-of e) table))
 
 
 ;Takes a list of arguments and a table, and then returns a list composed of the meaning
@@ -627,16 +628,8 @@
          (evlis (arguments-of e) table)))
 
 
-;In TLS, the function was originally called "apply", but Scheme R5RS already has its built in apply,
-;so I made another one specifically called tls-apply.
-(define (tls-apply fun vals)
-  (cond
-    ((primitive? fun) (tls-apply-primitive (second fun) vals))
-    ((non-primitive? fun) (tls-apply-closure (second fun) vals))
-    (else
-     (error "tls-apply: not a function" fun))))
-
-
+; This is the TLS apply primitive. It essentially handles all of the primitives in the chapter
+; where the interpreter was introduced.
 (define (tls-apply-primitive name vals)
   (cond
     ((eq? name '+) (apply + vals))
@@ -652,6 +645,21 @@
     ((eq? name 'number?) (number? (first vals)))
     (else
      (error "unknown primitive" name))))
+
+
+;In TLS, the function was originally called "apply", but Scheme R5RS already has its built in apply,
+;so I made another one specifically called tls-apply.
+(define (tls-apply fun vals)
+  (cond
+    ((primitive? fun) (tls-apply-primitive (cadr fun) vals))
+    ((non-primitive? fun) (tls-apply-closure (cadr fun) vals))
+    (else (error "tls-apply: not a function" fun))))
+
+;Tests for function
+; (define primitive-fun '(primitive +))
+; (tls-apply primitive-fun '(2 3))   ;returns 5
+; (tls-apply 42 '(1 2))              ;ERROR: tls-apply: not a function 42
+; (tls-apply primitive-fun '(1 10))  ;returns 11
 
 
 (define :atom?
@@ -683,7 +691,12 @@
     ((const-atom? e) *const)
     (else *identifier)))
 
-
+;Testing the function
+; (atom-to-action 5)                                   ;const
+; (atom-to-action 'list)                               ;identifier
+; (atom-to-action 'lambda)                             ;identifier
+; (atom-to-action '(lambda (x) (lambda (y) (+ x y))))  ;identifier
+(newline)
 
 
 ;; ===========================================================================
@@ -700,6 +713,14 @@
        ((eq? (car e) 'cond)   *cond)
        (else *application)))
     (else *application)))
+
+;Testing the function
+; (list-to-action '(lambda (x) ((lambda (y) (+ x y)) 5)))               ;*lambda
+; (list-to-action '(lambda (x) (lambda (y) (lambda (z) (+ x y z)))))    ;*lambda
+; (list-to-action '((lambda (x) ((lambda (y) (* x y)) 2)) 3))           ;*application
+; (list-to-action '((lambda (x) (lambda (y) (x y))) (lambda (z) z)))    ;*application
+; (list-to-action '(cond ((> x 0) x) ((< x 0) (- x)) (else 0)))         ;*cond
+(newline)
 
 
 
@@ -793,7 +814,7 @@
 
 
 
-;test cases from professor. these were posted on MS Teams.
+;TEST CASES GIVEN BY PROFESSOR. DO NOT COMMENT THESE OUT.
 (value '((lambda (x) (add1 x)) 3))
 ;this returns 4
 
