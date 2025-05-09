@@ -325,9 +325,26 @@
 ;------------------------------------------------------------------------------------------------
 ( define empty-env '())
 
+
+;Proofs on The new enviorment
+
+;Precondition: env is a list of (name . val) bindings.
+
+;Postcondition: Returns a new environment with (name val) added to the front.
+
 (define (extend-env name val env) 
   (cons (list name val) env))
 
+;Base case: If names is null then vals should also be null so program returns the env
+
+;Inductive hypothesis: Assume that for the lists rest-names and rest-vals,the enviorment correctly
+;extends for all other bindings from rest-names to rest-vals
+
+;Inductive step:we let our names be (cons name rest-names) and our values be (cons val rest-vals)
+;this will result in our extend*env looking like extend*env rest-names rest-vals(extend-env name val env)
+;Via the defention of our IH our extend*env should add all the bindings from rest-names and rest-vals
+;Via the proof from extend-env our env(car names)(car vals) should be added to the front.
+;Therfore the full call builds and enviorment with the bindings from names and vals.
 
 (define (extend-env* names vals env)
   (if (null? names)
@@ -336,7 +353,11 @@
                    (cdr vals)
                    (extend-env (car names) (car vals) env))))
 
-
+;Base case:The lookup is unsucsesfull and returns an error
+;Inductive hypothesis:Assume for the tail rest-env,(apply-env rest-env name) returns the value for the name
+;Inductive step: our env =( cons binding rest-env)
+;if the name matches the cadr of env then we return it with the correct value, if we dont then we keep on reccuring
+;Via the IH our function returns the correct result until either the value is found or we run into an error.
 (define(apply-env env name)
   (cond ((null? env)
          (error 'apply env(format "unbound identifier: ~a" name))) 
@@ -363,7 +384,7 @@
 ; (define (*identifier e table)
 ;   (lookup-in-table e table initial-table))
 
-;New Version:
+;New Version:(in the bottom of the code)
 ;( defined in code)(Put line of it once done)
 ;(define (*identifier e table)
   ;(apply-env table e))
@@ -513,7 +534,7 @@
 ;  (apply-env table e) )
 
 
-; This clearly demonstrates lexical scoping:
+; These code snippits demonstrate lexical scoping:
 ; - When a lambda is created, the current table is captured into the closure.
 ; - When called, a new environment is built over the saved table.
 ; - Variable lookup always uses the environment stored in the closure.
@@ -561,12 +582,14 @@
     (lambda () x))) ; ← at this point x is bound
  10)
 
+;--------------------------------------------------------------------------------
 
 
 
 
-
-
+;---------------------------------------------------------------------------------
+;1.3 and 1.4 Relatshonship
+;--------------------------------------------------------------------------------
 
 ; BASIC HELPER FUNCTIONS. These are basic functions such as atom?, add1, etc.
 ; Or they are functions that have been translated to R5RS Scheme.
@@ -1105,7 +1128,7 @@
 
 
 
-
+;1.7 Y-combinator TLS-REC
 ;------------------------------------------------------------------------------------------------
 
 
@@ -1311,7 +1334,8 @@
 (define (value e)
   (meaning e initial-env))
 
-
+;TESTS
+;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 ;test cases from professor. these were posted on MS Teams.
 (value '((lambda (x) (add1 x)) 3))
