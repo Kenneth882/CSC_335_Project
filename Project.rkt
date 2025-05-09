@@ -107,6 +107,12 @@
 ; 8-16) value, meaning, *const, *quote, *identifier, *lambda, *application, *evcon, *else
 ; 17-22) primitive?, non-primitive?, apply, apply-primitive, atom?, apply-closure
 
+
+;4/12-Kenneth(Comments Below)
+; 1.1 is basicly a translation of TLS from TLS language into R5RS. I do notice that some functions from the book are repeated so i think the outline
+; for the interpreter would be to get the simple functions and helpers out of the way first, that way we can keep refering to them and avoid redundent code.
+;Initially i wll focus on just pure translation and then after everything is translated I will focus on connecting the important components
+
 ;4/13/25 - Alexis (Comments Below)
 ;1.1 of the project is based on TLS chapter 10. The implementations of the the function.
 ;One of the important things I have noticed are most functions are tail recursive (lookup-in-entry-helper, lookup,entry, etc.)
@@ -133,6 +139,14 @@
 ; first creating the basic helper functions, the ones that are in the chapter and commonly used in TLS and then we went through the list one
 ; by one and made the functions. 
 
+;4/14-Kenneth(Commments Below)
+;I implememnted most of TLS straight from the book, some of the functions still need to be linked.Most of the test cases that i did work with the function
+; on its own, however there are certain functions that connect that have some logical errors to them, so we will hopfully work on fixing that. Since TLS
+;had some repeated functions that did diffrent things we still have to clean and fix that so that each function can past every test case.
+
+;4/14-Alexis(Comments Below)
+; I reviewed the code Kenneth implemented and fixed some errors, and added some of the basic functions from the book TLS. 
+; Kenneth explained the outline and how some of the functions are repeated and some of the logic in TLS is flawed.
 
 
 ; 4/16/25 - Hamim (Comments Below)
@@ -144,6 +158,13 @@
 
 ; 4/17/25 - Hamim (Comments Below)
 ;Action functions.
+
+;4/19-Kenneth (Comments Below)
+
+;Started on the Syntax checker for TLS.Since we have a lot of functions for TLS I decided to have two refrences, conditons and special conditions
+;Conditions will be all the operations that can be easily checked such as some of the built in operations and some primitives. Since some
+;operations will be more complex like lambada where we will probably have to reccur to check all the other operations inside it we can always refer
+;to the condtions to show if the arguments inside them follow the correct format.
 
 
 ; 4/28/25 - Alexis (Comments Below)
@@ -163,9 +184,27 @@
 ; were also incorrect.
 
 
+;4/29-Kenneth(Comments Below)
+;After My inital layout of the syntax checker i realized that some of the Design was not correct. We dont really need a special-checker since
+;each of the functions like lambda,cond,if ect does its own unique thing so refering to that would be redundant.I'm still not finished with it but most of the
+;basic operations are done.The specific TLS functions still need to be checked and also need to work on showing specific
+;error messages instead of just outputting false.
+
+;4/29-Alexis (Comments Below)
+; I realized how complicated Cond is when it comes to this since I will need the helper functions made for expression. 
+; Although And and other functions were made, I only used syntax-checker we made.
+; I also added specs to my previous function kenneth and I made. 
+; And finished more basic functions.
+
 ;4/30/25 - Hamim (Comments Below)
 ;Cleaning up code, making sure test cases all run. In order to make the output look nicer, I added two (newline) so it is easier to see the output and what
 ;section of code corresponds to what.
+
+
+;4/30/25 - Alexis (Comments Below)
+; I implemented some finishing touches to 1.1 for we can present the code to the professor tomorrow. 
+; I also cleaned up 1.2 file and added some specs we missed. 
+; Fixed some errors as well.
 
 
 ; Now how do we approach this? In chapter 10 of the book we have some functions written completely and we just need to convert that to R5RS,
@@ -191,14 +230,11 @@
 
 
 ;This is a simple helper function that can be called that counts the number of elements in a list
-
-;Pre: lst is a list
-;Recur
 (define (count-elements lst)
   (if (null? lst)
       0
-      (+ 1 (count-elements (cdr last)))))
-;Post: returns the length of the list
+      (+ 1 (count-elements (cdr lst)))))
+
 
 ;A function used to add by 1
 (define (add1 n)
@@ -274,7 +310,23 @@
   (or (number? a)
       (eq? a #t)
       (eq? a #f)
-      (memq a '(cons car cdr null? eq? atom? zero? add1 sub1 number?))))
+      (if
+       (memq a '(cons car cdr null? eq? atom? zero? add1 sub1 number?))
+       #t #f)))
+
+
+;Testing the Function const-atom?
+; (const-atom? 'add1)                                 ;returns #t
+; (const-atom? 'sub1)                                 ;returns #t
+; (const-atom? 'number?)                              ;returns #t
+; (const-atom? 'false)                                ;returns #f
+; (const-atom? '(1 2 3))                              ;returns #f
+; (const-atom? '())                                   ;returns #f
+; (const-atom? '(cons 1 2))                           ;returns #f
+; (const-atom? (if (const-atom? 'add1) 'yes 'no))     ;returns #f
+; (const-atom? (cdr '(#t #f 42)))                     ;returns #f
+; (const-atom? (if (zero? 0) #t #f))                  ;returns #t
+; (const-atom? (if (number? 5) 'number 'not-number))  ;returns #f
 
 
 ;This makes a new table. It takes formal parameters, values, and the current table. And then
@@ -312,35 +364,35 @@
 ;; ===========================================================================
 ; This is the lookup-in-entry function. Accompanied with it is the lookup-in-entry-helper.
 ;; ===========================================================================
-                                                                             
+;Design Idea:
+;when looking up the entry there will be 3 possible cases, one where the name is found in entry, it will then return the associated value with the name.
+;If it does not exist it will return the associated value once the entry-f is called.
+;The third case will be if no name is given aka an empty char/string, then we call the entry-f function.
+; ___________________
+;[_______ayp|nyp_____]------>(first entry)= ayp----->(second entry) =nyp -------->(if ayp and nyp = name then we return entry-f)
+;                                                                                   (needs helper)
 
-; design idea:
-; Since the code was provided in TLS we just need to break down the logic.
-; This function checks if a specific name is found in an entry
-; If it does exist in entry then we return the associated value.
-; If not then we return an error message.
-: The way we breakdown the logic is this, we use a loop to check every entry until there are no more entrys.
-; uses t-recur
+;ayp: the first tables (ill go more in detail later i gotta push)
+;nyp: the remaining tables
 
-;Pre: name is string, entry is a list
+
 
 (define (lookup-in-entry name entry entry-f)
   (let loop
     ((names (first entry))
-     (values (second entry)))    
+     (values (second entry)))
+    
     (cond
       ((null? names) (entry-f name))
       ((eq? (car names) name) (car values))
       (else
        (loop (cdr names) (cdr values))))))
-;Post: returns entry-f if name is not in any entry, if name exist in entry then returns the associated value
 
 ; Testing the function
 ; (define entry '((x y z) (1 2 3)))
-; (lookup-in-entry 'x entry (lambda (name) 'not-found-in-entry)) ;returns 1
-; (lookup-in-entry 'a entry (lambda (name) 'not-found-in-entry)) ;returns not-found-in-entry
-; (lookup-in-entry 'entree '((appetizer entree beverage) (ar luka lebron)) (lambda (name) 'not-found)) ;returns luka
-
+; (lookup-in-entry 'x entry (lambda (name) 'not-found-in-entry))                   ;returns 1
+; (lookup-in-entry 'a entry (lambda (name) 'not-found-in-entry))                   ;returns not-found-in-entry
+; (lookup-in-entry 'h2 '((h1 h2 h3) (ar luka lebron)) (lambda (name) 'not-found))  ;returns luka
 
 
 
@@ -365,10 +417,24 @@
 ;                (spaghetti spumoni))
 ;               ((appetizer entree beverage)
 ;                (food tastes good))))
-; (lookup-in-table 'entree table (lambda (name) 'not-found)) ;returns spaghetti
-; (lookup-in-table 'dessert table (lambda (name) 'not-found)) ;returns spumoni
+
+; (lookup-in-table 'entree table (lambda (name) 'not-found))    ;returns spaghetti
+; (lookup-in-table 'dessert table (lambda (name) 'not-found))   ;returns spumoni
 ; (lookup-in-table 'appetizer table (lambda (name) 'not-found)) ;returns food
-; (lookup-in-table 'snacks table (lambda (name) 'not-found)) ;returns not-found
+; (lookup-in-table 'snacks table (lambda (name) 'not-found))    ;returns not-found
+
+; (define complex-table 
+;   '(((alpha beta gamma)
+;     (1 2 3))
+;    ((delta epsilon zeta)
+;     (4 5 (nested list)))
+;    ((theta iota kappa)
+;     ((deep nested) 8 9))))
+
+; (lookup-in-table 'gamma complex-table (lambda (name) 'not-found))   ;returns 3
+; (lookup-in-table 'zeta complex-table (lambda (name) 'not-found))    ;returns (nested list)
+; (lookup-in-table 'theta complex-table (lambda (name) 'not-found))   ;returns (deep nested)
+; (lookup-in-table 'lambda complex-table (lambda (name) 'not-found))  ;returns not-found
 
 
 
@@ -402,9 +468,11 @@
 
 
 ;Testing the function
-; (check-set '())           ;returns #t
-; (check-set '(1 2 3 4))    ;returns #t
-; (check-set '(1 2 2 3))    ;returns #f
+; (check-set '())                                  ;returns #t
+; (check-set '(1 2 3 4))                           ;returns #t
+; (check-set '((lambda (x) x) (lambda (x) x)))     ;returns #f
+; (check-set '(1 2 (lambda (x) x) 3))              ;returns #t  
+; (check-set '(1 2 (lambda (x) x) (lambda (y) y))) ;returns #t
 
 
 
@@ -425,11 +493,9 @@
 
 
 ;Testing the function
-; (check-equal-len-list '(x y z) '(10 20 30))  ;returns #t
-; (check-equal-len-list '() '(1 2 3))          ;returns #f
-; (check-equal-len-list '(x y z) '())          ;returns #f
-; (check-equal-len-list '() '())               ;returns #t
-; (check-equal-len-list '(a b c d) '(1 2 3))   ;returns #f
+; (check-equal-len-list '() '(1 2 3))                                ;returns #f
+; (check-equal-len-list '() '())                                     ;returns #t
+; (check-equal-len-list '(1 2 (lambda (x) x)) '(a b (lambda (y) y))) ;returns #t
 
 
 
@@ -440,7 +506,7 @@
 ; the names list and values list are the same length. And then it returns the entry.
 ;; ===========================================================================
 
-;pre: this takes two? three? arguments. names, values, and build-f (an error function).
+;pre: this takes two? three? arguments. names, values, and build-f (an error function). FIX THIS PRE CONDITION!
 (define build list)
 (define new-entry build) ;this is straight from TLS. Need to fix this section.
 
@@ -449,9 +515,10 @@
 
 
 ;Testing the function
-;(build '(x y z) '(1 2 3))     ;returns ((x y z) (1 2 3))
+; (build '(x y z) '(1 2 3))     ;returns ((x y z) (1 2 3))
 ; (build '(x y z) '(1 2 3 4))   ;returns value error.
 ; (build '(x x y z) '(1 2 3 4)) ;returns name error
+
 
 
 
@@ -470,15 +537,28 @@
 ; we use action functions. We have atom-to-action, expression-to-action, and list-to-action. 
 ;; ============================================================================
 
-;Pre: fun may be any Scheme datum
 (define (primitive? fun)
   (and (pair? fun) (eq? (first fun) 'primitive)))
-;Post: returns true if fun is a pair and the first element of that pair is a primitive
 
-:pre: fun may be any Scheme datum
+;Testing the function
+; (primitive? '(primitive +))                         ;returns #t
+; (primitive? '(primitive car))                       ;returns #t 
+; (primitive? 'primitive)                             ;returns #f     
+; (primitive? '(((primitive list)) (primitive cons))) ;returns #f
+; (primitive? '(((primitive /)) extra))               ;returns #f
+
+
+
 (define (non-primitive? fun)
   (and (pair? fun) (eq? (first fun) 'non-primitive)))
-; Post: returns if fun is a pair and the first element of that pair is not aprimitive
+
+;Testing the function
+; (non-primitive? '(primitive +))                         ;returns #f
+; (non-primitive? '(primitive car))                       ;returns #f 
+; (non-primitive? 'primitive)                             ;returns #f     
+; (non-primitive? '(((primitive list)) (primitive cons))) ;returns #f
+; (non-primitive? '(non-primitive (lambda (x) x)))        ;returns #t 
+
 
 
 ;Action for constants
@@ -490,10 +570,21 @@
      (else
       (build 'primitive e))))
 
+;Testing the function
+; (*const 12 'testcase)
+; (*const 'cons 'testcase)
+; (*const '(lambda (x) x) 'testcase)
+
+
 
 ;Action for quote
 (define (*quote e table)
   (text-of e))
+
+;Testing the function
+; (*quote '(1 2 3) 'dummy)        ;returns 2
+; (*quote '(lambda (x) x) 'dummy) ;returns (x)
+
 
 
 ;Action for identifier
@@ -507,9 +598,6 @@
 
 
 ;; evcon : list-of-cond-clauses table → value
-
-;T-recur
-;Pre: lines is a list, and table is a list
 (define (evcon lines table)
   (cond
     ((else? (question-of (car lines))) (meaning (answer-of (car lines)) table))
@@ -517,7 +605,6 @@
      (meaning (answer-of (car lines)) table))
     (else
      (evcon (cdr lines) table))))
-;Post: returns the value of the question and answers
 
 
 
@@ -542,8 +629,6 @@
 
 ;In TLS, the function was originally called "apply", but Scheme R5RS already has its built in apply,
 ;so I made another one specifically called tls-apply.
-
-
 (define (tls-apply fun vals)
   (cond
     ((primitive? fun) (tls-apply-primitive (second fun) vals))
@@ -629,23 +714,24 @@
       (list-to-action e)))
 
 
-;Testing the function. I think these are all correct, not sure though.
-;((expression-to-action 42) 42 '())           ;returns 42
-;((expression-to-action #f) #f '())           ;returns #f
-;((expression-to-action #t) #t '())           ;returns #t
-;((expression-to-action 'car) 'car '())       ;returns (primitive car)
-;((expression-to-action 'cdr) 'cdr '())       ;returns (primitive cdr)
-;((expression-to-action 'null?) 'null? '())   ;returns (primitive null?)
-;((expression-to-action 'eq?) 'eq? '())
-;((expression-to-action 'atom?) 'atom? '())
-;((expression-to-action 'zero?) 'zero? '())
-;((expression-to-action 'add1) 'add1 '())
-;((expression-to-action 'sub1) 'sub1 '())
-;(expression-to-action '(quote hello))
-;(expression-to-action '(lambda (x) x))
-;(expression-to-action '(cond ((#t 1))))
-;(expression-to-action '(add1 4))
-;(expression-to-action '((lambda (x) x) 5))
+;Testing the function
+; (expression-to-action '(quote hello))                           ;#<procedure:*quote>
+; (expression-to-action '(quote (1 2 3)))                         ;#<procedure:*quote>
+; (expression-to-action '(lambda (x) (lambda (y) (+ x y))))       ;#<procedure:*lambda>
+; (expression-to-action '((lambda (x) (lambda (y) (+ x y))) 3))   ;#<procedure:*application>
+; (expression-to-action '(if (zero? x) 0 (add1 x)))               ;#<procedure:*application>
+
+; ((expression-to-action '(lambda (x) (+ x 1))) '(lambda (x) (+ x 1)) '())
+; (non-primitive (() (x) (+ x 1)))
+
+; ((expression-to-action '(lambda (x) x)) '(lambda (x) x) initial-table)
+; (non-primitive (#<procedure:initial-table> (x) x))
+
+; ((expression-to-action '(lambda (x y) (+ x y))) '(lambda (x y) (+ x y)) initial-table)
+; returns (non-primitive (#<procedure:initial-table> (x y) (+ x y)))
+
+; ((expression-to-action '(lambda (x) (lambda (y) (+ x y)))) '(lambda (x) (lambda (y) (+ x y))) initial-table)
+; returns (non-primitive (#<procedure:initial-table> (x) (lambda (y) (+ x y))))
 (newline)
 (newline)
 
@@ -704,22 +790,6 @@
 
 
 
-;my own test cases
-;(value '5)                   ; Should return 5
-;(value '#t)                  ; Should return #t
-;(value '(quote hello))       ; Should return hello
-;(value '(cond (#t 'hello)))  ; Should return hello
-;(value '(cond (#f 'wrong) (else 'correct))) ; Should return correct
-(newline)
-(newline)
-
-
-
-
-
-
-
-
 
 
 
@@ -772,4 +842,3 @@
               (lambda (y) (cons x y))))
          2))
 ;this returns (2 2 . 3)
-
