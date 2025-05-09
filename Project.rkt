@@ -421,60 +421,32 @@
 
 
 
-
-;1.4 Lexical scope
+;--------------------------------------------------------------------------------------------------
+;1.4 Closures and Lexical Scope in TLS
 ;---------------------------------------------------------------------------------------------------------
+;; Question: Research closures and lexical scope, and prove that your
+;; implementation of TLS supports these features correctly.
+;; Provide definitions, structural insights, and use induction to justify correctness.
 
+;----------------------------------------------------------------------------------------------------------
+;Quick Backround: Lexical Vs Dynamic Scoping
+;--------------------------------------------------------------------------------------------------------
 ;1.4 of the project is asking us to research closure and lexical scope and prove that our implementation
 ; of TLS implements them correctly.
-;We then have to prove this via structural induction
+
 
 ;The first part of the assigment is for backround and asking us to research what exactly lexical scoping is
-;Throught our findings and research of lexical scope, it seemed like it always would be compared to
-;dynamic scoping.To eliminte confusion we dove into the diffrences between the two.
+; our findings and research of lexical scope, along the way we decided to do a comparison between Dynamic and Lexical scoping.
 
 
-;Dynamic scoping is usally reffered as a stack like structure where the varible pushed is whats first in the scope/ innermost function.So the most recent bound varible
-;is what is used even if the varible was defined in a diffrent scope.So the most recent varible determines the value of it at run time
 
-; so like as example if we have
-;(define y 10)
-;(define (h) y)
-
-;(define (ad)
-   ;(let((y 20))
-       ;( h)))  
-;(ad)
-
-;In both lexical scope and dynamic scope h refers to y, however in dynamic scope becuase its a stack like structre the most recent varible of y which in this case is 20
-; would be used so at run time our value would be 20.
+;Dynamic scoping is looked at like a  stack like structure where the varible pushed is whats first in the scope/ innermost function.So the most recent binding varible
+;is what is used even if the varible was defined in a diffrent scope.So the most recent varible determines the value of it at run time regardless of where
+; the function was originally defined.
 
 ;Lexical scoping is when we determine the varible at compile time rather thean run time. Instead of a stack the varible
-; we refer to is based on our static structure of the code.So in the example above when we look at the function ad,
-; we do set the local y to 20, however h refers back to the defention of y when its 10 since it looks at the structure rather than a stack.
-
-
-;Now that we've explained the key differences between lexical and dynamic scoping we are going to go more in depth in explaining lexical scope.
-
-;However before we explain Lexical scope we should define its relationship with closures
-
-;Important defenitons:
-
-;Bound-Occurance: a bound occurance is when a varible sits inside the scope that it introduces it in.Bound has a binding right there
-;Free occurance:  a varible that is not introduced locally and not bound by an local bindings. Free to look outside the local scope
-;Unbound occurance: a varible that is undefined. Unbound is owned by no one.
-
-;What is a closure?
-
-;a closure is the run time value profuced when a function is created inside some lexical enviorment
-
-;The closure usually consists of two parts, the code and the enviorment. The code consists of the functions
-;parameter list and body while the enviorment has like a "stored memory" of bindings that were visible where the location was defined which
-;; as defined eariler is a free varible. In our case our functions can have acess to other varibles on the outside due to closure
-;and multiple closures created in the same lexical scope will reffer to its own copy of our defined enviorment.
-
-
-
+; we refer to is based on our static structure of the code.A varible is bound by the closest encolosing lambda, expression at the time the function
+; is defined, not a the time it is called
 
 ;What exactly is lexical scoping?
 ;An items lexical scope is the place in which it was created.
@@ -486,12 +458,43 @@
 ;so the childs function is lexically bound to the parents function.
 
 
-;How does our code demonstrate that it is lexically scoped?
+;Basic example to show the difference between dynamic and lexical scoping
 
-;From the defneition we provided above and the snipiets of code bellow is what we will use to prove that
-;our implementation of TLS implements lexical scoping.
+; (define y 10)
+; (define (h) y)
+; (define (ad) (let ((y 20)) (h)))
+
+;In lexical scoping ad would return 10 because h was defined in an enviorment
+;In dynamic scoping it would return 20 because h is called inside of the scope of y=20.
 
 
+;--------------------------------------------------------------------------------------------------------
+;Key concepts
+;--------------------------------------------------------------------------------------------------------
+
+
+;Now that we've explained the key differences between lexical and dynamic scoping we are going to go more in depth in explaining lexical scope.
+
+;Important defenitons:
+
+;Bound-Occurance: a bound occurance is when a varible sits inside the scope that it introduces it in.Bound has a binding right there
+;Free occurance:  a varible that is not introduced locally and not bound by an local bindings. Free to look outside the local scope
+;Unbound occurance: a varible that is undefined. Unbound is owned by no one.
+
+;What is a closure?
+
+;a closure is the run time value profuced when a function is created inside some lexical enviorment
+;It contains
+;1. The functions body
+;2. An environment that captures the values of free variables at definition time
+
+
+; ------------------------------------------------------------------------------
+   ; TLS Implementation of Lexical Scope and Closures
+; ------------------------------------------------------------------------------
+
+;A lambda expression is converted into a closure by capturing the current enviorment.
+;
 ;(define (*lambda e table)
  ; (build 'non-primitive (cons table (cdr e))))
 
@@ -509,6 +512,54 @@
 ;(define (*identifier e table) 
 ;  (apply-env table e) )
 
+
+; This clearly demonstrates lexical scoping:
+; - When a lambda is created, the current table is captured into the closure.
+; - When called, a new environment is built over the saved table.
+; - Variable lookup always uses the environment stored in the closure.
+
+
+; ------------------------------------------------------------------------------
+;  Structural Induction Argument for Correctness
+; ------------------------------------------------------------------------------
+
+
+;How does our code demonstrate that it is lexically scoped?
+
+;From the defneition we provided above and the snipiets of code bellow is what we will use to prove that
+;our implementation of TLS implements lexical scoping.
+
+;Structure:
+;Creating the lambda captures the current enviorment.
+;The function applicaiton extends the captured enviorment with new bindings.
+;Evaluation used the extended enviorment via 'apply' env
+
+;Base case:
+; when-Expression is a literal no lookup ocurs
+;When expression is a variable, it gets evaluated using apply-env which searches the stored enviorment
+
+;Indcutive Hyptothesis: all the subexpressions respect Lexical scoping
+
+;When evaluating the lambda body
+;- the bodu uses a closures enviorment and not the callers
+;- Any free varibles in the body refere to the bindings in the saved or above
+;Therfore all the varibles are resolved lexically based on where the function was defined in the code
+; and not when its called.
+
+;------------------------------------------------------------------------------------
+;Demonstration
+;------------------------------------------------------------------------------------
+
+; This function creates a closure over x:
+
+
+
+
+ ((lambda (x)
+   ((lambda (f)
+      ((lambda (x) (f)) 20))
+    (lambda () x))) ; ← at this point x is bound
+ 10)
 
 
 
@@ -1310,11 +1361,7 @@
                          3)))
               (lambda (y) (cons x y))))
          2))
-;this returns (2 2 . 3)
-
-
-
-
+;this returns (2 2 . 3)  
 
 
 
