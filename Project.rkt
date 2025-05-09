@@ -213,132 +213,106 @@
 ; by one and made the functions. 
 
 
-
+;----------------------------------------------------------------------------------------------------
 ;1.3
 ;------------------------------------------------------------------------------------------------------
 
-;this is our approach to 1.3 and 1.4
-;first off 1.3 asks:
 
 ;; 1.3 After giving a specification for the environment subsystem of TLS, prove that your implementation
 ;;     satisfies this specification.  Then change the representation of environemnts to use lists of
 ;;     bindings rather than the names-values pairs shown in the text, and show that the altered
 ;;     representation both satisfies your specification and works with the rest of the interpreter.
 
+
+;------------------------------------------------------------------------------------------------
+;Specs of the  current Enviorment
+;----------------------------------------------------------------------------------------------------
 ;So first we must give a spec for the enviorment subsystem in TLS and then we have to prove that
 ; our implementation fufills that specification.
 
-;Right now our enviorment consists of the table which serves as a list of entries where each entry is the two-list structure
-;consisting of names and vals
 
-;we have the lookup-in-table function which reccursivly scans that list to find a binding
+;In TLS the enviorment refers to the table, which is a list of entires, and each entry consistes of varible bindinds
+;which are repsented as a key value pair like:
+;(( x y z)( 1 2 3))
+;The first list contains the names of the varible and the second one the values.
 
-; and we have extend-table which pushes a new element onto the head of the list.
-
-
-;Formal Env Specs for TLS
-
-;empty-env: returns the empty list
-
-
-;build:
-;pre condtion: names must be a set
-;post condtion: our build function produces a name value pairing that maps our entry's names[i] to vals[i]
+;They key functions in the Current TLS are:
+;-empty-env: returns an empty tavle ()
+;-build : constructs an entry froma  list of names and a list of values
+;-extend-table: preappends a new entry to the enviorment
+;-lookup in entry: searches for a name in a single entry
+;lookup-in-table:reccursivly searchs throigh the table for a binding
 
 
+
+
+;-----------------------------------------------------------------------------------------------
+;Function conditions
+;----------------------------------------------------------------------------------------------
+
+;empty-env
+;Pre condtion: none since
+;Post condtion: returns '()
+
+;build
+;Precondtion: names is a list of unique symbols which has the same len as values
+;Post condtion: returns a pair of (names.values)
 
 ;extend-table
-;pre condtion: names must be a set
-;Post condtion:extend-table returns a new enviorment with new bindings
+;Precondtion: entry is produced by build,the table is a list of entries
+;Post condtion: returns a new table with the entry prepended
 
+;Lookup-in-entry
+;Precondtion:entry is a pair(names . values)
+;Post condtion: returns the value at a postion of name in names,else calls entry-f
 
-;lookup in entry
-
-;pre condtion:entry was built by build
-;post condition:if name appears at an index i in ns return list-ref vs i
-;else we send it entry-f name
-
-
-;lookup-in-table:
-;precondtion:table is a list of entries
-;post-condtion:if an entry in table binds name, the first entrys value is returned,else we call the function (table-f)
-;if our enviorment is not unbound it retunrs the name value pairing,
-;else we return an error siginfiing that our enviorment has an unbound identifier
-
-
-
-
-
-
-
-
+;lookup-in-table
+;precondition:table is a list of entries
+;Postcondtion: searces each entry using lookup-in-entry, else it calls table-f
+;-----------------------------------------------------------------------------------------------
 ;PROOFS on our functions
+;---------------------------------------------------------------------------------------------
 
-;Proof on empty env:
-;Based on our condtion we want to prove that empty env will return the empty list.
-;Lookup on () falls to table-f so every lookup is unbound
+;Proof empty env:
+;Returns '(). Any lookup falls through and calls table-f, which is the correct behavior for an unbound varible
 
-;Proof on Build
+;Proof  Build
+;Constructs an entry by pairing names and values. The invarient we mantain is list-ref = name i =n
+; which means that the list-ref values i is bound to n
 
-;Build simply returns (list names vals): where car is nams and cadr is vals.
-
-
-;Proof on lookup in entry
-
+;Proof lookup-in-entry
 ;Base case:the length of our list is empty so we execute (entry-f name) since no correct binding exists.
-;( for reference entry-f is executed when there is no match)
 
 ;Inductive Hyptothesis: assume the propeties holds for rest-ns
 
-;inductive step: the part we induct on is ns=(cons s rest)
-;If s =name then the function returns the (car vs) which will give us the value we want,
-;Otherwise we keep reccuring with (cdr ns) by using the loop and setting cdr ns to rest-ns.Since (cdr ns)=rest-ns
-;and  (cdr vs) us the alligned value list pair, each recursive call holds true assuming our pre condtions are correct, hence
-; our IH gives us the result we desire.
+;inductive step: if (car names) mathces the query then we return (car values) since they are bounded to one another
+;otherwise we reccur on (cdr names) and (cdr values) ensuring that the name value pairing remains true.
 
-;Proof on lookup-in-table
+
+;Proof lookup-in-table
 ;Base case: the table returns empty and calls the function (table-f s)
 
 ;Inductive hypthesis: Assume that property holds for rest-table
 
-;inductive step: our table is equal to (cons entry rest-table)
-;Once we have that table defined we run lookup-in-entry,
-;if our entry binds s then we return the correct value, satisfying the condtion "if our enviorment is not unbound it retunrs the name value pairing"
-;if our entry does not meet the value we reccurse using rest-table.Because we have proved that if our s
-;holds a value we return the name value pairing in every step we can conclude our value will keep reccuring or return the pairing
-;until we reach the base case, which in that case we call (table-f s)
+;inductive step: Do a check on (car table) if entry contains name, return value
+;else we reccur on (cdr table)
 
 
-
+;-----------------------------------------------------------------------------------------------
+;name, value pairs ->>>>>> List-of-Bindings
+;-----------------------------------------------------------------------------------------------
 
 
 ;changing the representation of environemnts to use lists of bindings rather than the names-values pairs
 ;SO far our implementation consists of name value pairs in the enviorment tables,
-;our enviorment tables are assosicated with this as the values get stored in the tables like
+; previously our enviorment tables :
 ;(( x y z)( 1 2 3))
-;in code:
 
-;(define entry '((x y z) (1 2 3)))
-;(lookup-in-entry 'x entry (lambda (name) 'not-found-in-entry)) ; → 1
+;We want to change that into
 
-;in this case the value x is binded to 1 and if we change x to y
-;(lookup-in-entry 'y entry (lambda (name) 'not-found-in-entry)) ; → 2
-;so right now our elements are binded to one another using the name value pair
+;((x.1)(y.2)(z.3))
 
-;For applying functions we have the extend table  for closure which creates a
-;new name value mapping of the parameters in formals to the arguments in vals.
 
-;so if formals are (x y) and vals are (5 6) then we would just get
-
-;x -> 5
-;y -> 6
-
-;when we also test using value using the code as an example:
-;(value '((lambda (x) (add1 x)) 3)) ; => 4
-; we in result would get an enviorment containing (x . 3)
-
-;So thats what we have so far,so our goal now is to turn that from name-value paris into
-; something that uses list of bindings.
 
 ;In order to do this we would have to implement some of the enviorment attributes
 ;that we learned about in eopl.
@@ -346,50 +320,15 @@
 ;In eopl there are 4 important function enviormiorments
 ;We have empty-env,extend-env,extend-env*, and apply env
 
-
-
-;PROOF AND SPECS
-
-;empty-env: Langauge: -> Env
-     ;empty-env is a constructor that returns the emprty enviorment
-
-;extend-env: Language : Sym x Val X Env -> Env
-; extend-env adds one binding(name,value)
-
-;extend-env* :Language: (List sym) X( List val) x env -> Env
-;extend-env adds *n* parallel bindings into the enviorment
-
-;apply-env: Language: Env x Sym -> Val
-;Looks up the name in the env, raises an error if unbound
-
-;Proofs
-
-;empty-env is '()
+;------------------------------------------------------------------------------------------------
+;The New Enviorment
+;------------------------------------------------------------------------------------------------
 ( define empty-env '())
 
-
-;extend-env
-;We let env be an enviorment
-;for any symbol s:
-; if the s=n then the first test in apply env returns our v.
-;otherwishe apply-env will skip the current head pair and reccurse into env prdocuivn apply-env env s
 (define (extend-env name val env) 
   (cons (list name val) env))
 
-;Pre cond: name is a set and the values of lenght of names is equal to length of values
-;Post: We let the enviorment be= names vals env
-;for every symobl S:
-;if s appears in names at the index i, apply-env env' s=(list-ref vals i)
-;if s not in names, apply-env env' s = apply-env env s.
 
-;Base case: names='() the function will return the env.
-;IH: assume property holds for test-names with corresponding rest-vals
-;IS:we let names =(cons n rest-names)
-;for all our s symbols, if s=name, our apply-env looks at the head pair in the current enviorment and returns the assosiacted value
-; if s is in rest-names, apply-env tail reccurses into the enviorment produced by the IH
-;if s is not in names
-
-;need to finish
 (define (extend-env* names vals env)
   (if (null? names)
       env
@@ -397,7 +336,6 @@
                    (cdr vals)
                    (extend-env (car names) (car vals) env))))
 
-;Need to work on.
 
 (define(apply-env env name)
   (cond ((null? env)
@@ -407,61 +345,38 @@
         (else
          (apply-env(cdr env) name))))
 
-;Since we already proved the specs all that we now need to do is to apply our new enviorment
-;to our TLS interpreter which we can do by simply changing our previous extend table since all
-;our functions call back to it
 
+;-------------------------------------------------------------------------------------------------
+;Transforming the rest of the code for compatibility
+;------------------------------------------------------------------------------------------------
 
+;Since we defined a new enviorment we have to change some of the functions in order to ensure compatibility
+; Old version used:
+; (define (extend-table formals vals table)
+;   (cons (build formals vals) table))
 
-;(define (extend-table formals vals table)
-  ;(cons (build formals vals) table))
-;we would change the extend-table into
-
+;New version:
 (define (extend-table formals vals table)
   (extend-env* formals vals table))
 
-;previously we were using cons but now with our extend-env* we can simply call it and it would
-; do all the work and avoid the name value pair that cons has.
+;Old version used
+; (define (*identifier e table)
+;   (lookup-in-table e table initial-table))
 
-;However since we changed our representation from (x y z) ( 1 2 3) to ( x 1) (y 2) ( z 3) we have to change our helper functions to meet these requirments and to sustain the
-;list bindings
-
-;Here are the functions that we changed so that our program is compatible with the new extend-table
-
-;Firstly we got rid of the lookup-in-entry and also the lookup-in-table functions.
-;This is because it was following the name values defeniton and it would work with
-;(define (extend-table formals vals table)
-  ;(cons (build formals vals) table))
-;however since we now have a list binding due to our extend-env* being in the extend-table function there really is not use
-;for those specific table lookup functions
-
-;we also had to edit the
-;;; (define (*identifier e table)
-;;   (lookup-in-table e table initial-table)) since it refered to the lookup-in-table function which we got rid of
-
-; we replaced it with
-
+;New Version:
+;( defined in code)(Put line of it once done)
 ;(define (*identifier e table)
   ;(apply-env table e))
 
-;testing the functions:
-;(value '((lambda (x) (add1 x)) 3))           ; ⇒ 4
-;(value '(((lambda (y) (lambda (x) (cons x y))) 3) 4)) ; ⇒ (4 . 3)
-
-
-
-
-
-
-
-
+;------------------------------------------------------------------------------------------------
 ;Overall analysis and conclusion
+;-----------------------------------------------------------------------------------------------
+
 ;How did alterning our lookup enviorment and enviorment in general ensure that our enviorments represent list bindings?
 
-;Initally with our pure TLS translation our entry was two parallel lists with a name and value relatshonship
-;it worked a little bit like a hash map/hash table however you may call it.
+;Initally with our pure TLS translation our entry was two parallel lists with a name and value relatshonship.
 ;Lookup table would grab an entry then would find the postion of the name and return the matching value.
-; so our table consisted of a list of entries which relied on two diffrent lists
+;  our  initial table consisted of a list of entries which relied on two diffrent lists.
 
 ;After the implementation of a new enviorment our program followed the binding model which eliminates
 ; the need for the name value relatshonship making the table a list of bindings
@@ -470,19 +385,39 @@
 ;instead of forming a name value pair, it pushed bindings for every actual pair so instead of (x y z)( 1 2 3) extend-env* would
 ;do ( x 1), ( y 2), ( z 3)
 
+;----------------------------------------------------------------------------------------------------------------------------
+;Tests
+;-----------------------------------------------------------------------------------------------------------------------------
+
+(define 1.3-env
+  (extend-env* '(x y)
+               '(1 2)
+               (extend-env* '(z)
+                            '(3)
+                            empty-env)))
+
+(apply-env 1.3-env 'x) ; => 1
+(apply-env 1.3-env 'y) ; => 2
+(apply-env 1.3-env 'z) ; => 3
+;(apply-env test-env 'a) ; => error: unbound identifier: a
+
+(define env1
+  (extend-env* '(a b c) '(1 2 3) empty-env))
+
+(apply-env env1 'a) ; => 1
+(apply-env env1 'b) ; => 2
+(apply-env env1 'c) ; => 3
 
 
-;some more tests(RUN IN terminal or bottom of page, Just quick tests to show interperter still works after the changes)
-;(equal? (value '((lambda (x) (add1 x)) 4)) 5) ; #t
+(define env3
+  (extend-env* '(x y) '(42 43)
+    (extend-env* '(p q) '(5 6)
+      (extend-env 'r 100 empty-env))))
 
-;(equal? (value '((lambda (x y) (cons y x)) 1 2)) '(2 . 1)) ; #t
-
-;(equal? (value '(((lambda (x) (lambda (y) (cons x y))) 2) 3)) '(2 . 3)) ; #t
-
-;(equal? (value '((lambda (x y z) (cons x (cons y (cons z '())))) 1 2 3)) '(1 2 3)) ; #t
-;(equal? 1 2)
-
-;(equal? (value '((lambda (x) (add1 x)) 4)) 6)
+(apply-env env3 'x) ; => 42
+(apply-env env3 'p) ; => 5
+(apply-env env3 'r) ; => 100
+;(apply-env env3 'z) ; => error: unbound identifier
 
 
 
@@ -576,232 +511,7 @@
 
 
 
-;TLS-REC 
-;------------------------------------------------------------------------------------------------
 
-
-;1.7
-
-;1.7 asks to equip our TLS interperter with the Y-Combinator
-
-;Task:
-;; 1.7 Drawing on Chapter 9 of The Little Schemer, equip your TLS with recursion to form TLS-REC, using the Y-combinator.
-;;     Research Y-combinators, and prove that the implementation you use actually implements a Y-combinator.
-;;     Explain, in detail, how the Y-combinator implements recursion.  Include interesting examples
-;;     of recursive programs written TLS-REC.
-
-
-;Before equiping our TLS with the Y combinator, we have to ask, what does the Y-Combinator even do??
-;After researching it thorughly we came to the conclusion that Y-combinator solves reccursion
-;without any self refernce. This is a bit mind blowing because it seems like it shouldnt be possible.
-
-;Throught this semester and in other classes and in prepearing for interviews we learned that jumping straight into code
-;is a bad idea since you are just throwing things onto the wall and hoping that it sticks, so because of this
-; we deleved a little bit into lambda calculus first to figure out what all of this means.
-
-;Lambda calculus is a very unique tool that can be used in any programing language as its all logic that
-;can be applied and executed anywhere
-
-;We started of simple looking at basic lambda calculus examples like
-
-; True=λx.λy x
-; False=λx.λy y
-;In our case the lambdas serve as our inputs, where x and y are the said inputs and we output the first value
-;which would signify true, if we take y then that would siginfy false.
-
-;This is cool and all but how does lambda calculus even do anything??
-;Lambda calculus uses substitution to calculate its values
-
-;Ex:(λx.x+1)
-;^ takes x as an input and executes x+1
-;(λx.x+2)22
-; in this case we use substitution where the outside value takes the place of x,
-; so our output would be 22+2 giving us 24.
-
-;This is the basic "Syntax" when it comes to the lambda calculus, the next thing we went over was
-;loops in lambda calculus
-
-;reccursion and loops ultimilty do the same job when it comes to solving a problem, some of the key differnces
-;being the difference in time and space complexity.
-
-;in lambda calculus a loop is defenined by using
-;(λx.xx).(λx.xx)
-;This a bit confusing to look at, at first. We see the input being of the langauge x and
-;have two of them and the parameters being the input function itself.
-;In reality this is simple, we just treat the parameter like an normal input
-; giving us
-;λx.(λx.xx)(λx.xx)
-; this process would keep repeating until we reach a stopping condition, so thats the basics of a loop in lambda calcus!
-; its a function that takes itself as an input how many times are needed.
-
-;after figuring out the looping aspect of lambda-calculus, the y-combinator operation is not much diffrent
-;The Y combinator states: λf(λx.f(xx))(λx.f(xx))
-;where λx is the input language, and our first function is what is serving as the input and the parameter
-;being the value that will be susbsituted into the input language.
-
-;This formula is basicly lambda calculus way of imitating reccursion, its not reccursive just implies it
-
-;Quick proof on how this implies reccursion
-
-;Given the defenition Y=λf(λx.f(xx))(λx.f(xx))
-;so given the defention Y we want to show that Y(F)= F(Y F)
-
-;all we really have to  do is expand Y
-;so given the defenition  Y=≈(λx.f(xx))(λx.f(xx))F
-;once we subsititue we get (λx. F (x x)) (λx. F (x x))
-;then this implies F ((λx. F (x x)) (λx. F (x x)))
-; so after plugging in we got back to where we started so it shows that Y F= F( Y F)
-
-;Formal proof:LATER
-
-;okay now after defining the defention and proving the code, how would we implement the Y-Combinator in TLS
-;Before diving into the design idea, when we were first focusing on translating we ran into some issues
-; our intial apporach made us give this as the implementation:
-
-;(define Y
-  ;(lambda (f)
-   ; ((lambda (x) (f (x x)))
-     ;(lambda (x) (f (x x))))))
-
-;At initial glance this looks fine we define Y as the function which serves its purpose as a defention
-;we then make the lambda,lambda(f) which serves as our outside function λf, then our inside functions
-;serve as our (λx.f(xx))(λx.f(xx)).
-
-;if that direct translation is good, then what is the problem?
-
-;This took some research and what we found is that it has to do with schemes evaluation
-;In our case ( f(x x)) is evaluated imediatlly meaning that we call the parameter into the function, but it keeps calling itself an infinite amount of times
-;due to it being a value and fufilling the closure properties. So we keep calling ( f(xx)) (f(x x)) an infinite amunt of times without f actually being executed
-;so it keeps calling but with no result.
-
-; to correct this we created a sepreate function with similar properties but with the edge case of infinite looping covered
-
-;Original Design idea:given our already defined function in lambda calculus (λx.f(xx))(λx.f(xx)), our goal is to convert this Y-combinator into TLS and intertwine our interpeter
-; to TLS.We know that the Y-Combinator just implies reccursion meaning that it has no traditional reccursive call backs.So because of this we know that our initial fucntion defention will never be called
-; it would just be there to give it a name. the second part of the Y-combionator consists of λx, which is just the lambda defnetion of the function so we should create the lambada function
-;which will take an input and a paramater which should be duplicated, meaning that it should be the same as the input. Now our body should consist of the traditional (λx.f(xx))(λx.f(xx)).
-;meaning we form two lmabdas looking like (lambda(x) (f x x)),(lambda(x) (f x x)).
-
-;Adding on to the design idea
-;After research our skeleton has the right structure but in order to prevent infinite calls we have to implement something that can capture the elements and execute correctly.
-; since our original guess code dosent really take into consederation the susbstitution property of lambda calculus.
-
-;In The little schemer book this is defined as
-;( define Y
-     ;(lambda(le)
-        ;((lambda(f) ( f f))
-         ;(lambda(f)
-            ;(le(lambda( x(( f f ) x))))))
-
-;However we optimized it a little bit and came up with this code
-
-
-(define Y   ;Global name
-  (lambda (F)  ;Y expects one argument
-    ((lambda (x)  ;Creates the first of two closures which will be applied to each other
-       (F (lambda (v) ((x x) v))))     ; lambda(v) makes the argument a value immedeiatly preventing the infinite reccursion
-     (lambda (x)    ;duplication of y combinator which serves as our reccursion
-       (F (lambda (v) ((x x) v)))))))
-
-;our lambda(v) will serve as a closure and v will be our substitution value which will be invoked when reccuring, this is used
-; so that our f(x x ) actualy call something without the inifite process of calling themselves.
-
-
-;Before integrating it into our TLS we will run some basic examples to show that our implementation
-;works on small scale functions
-
-(define fact-maker ; when called this refers to the Y combinator function itself
-  (lambda (self) ;This serves as our  λx/λself function expecting an input and its parameters
-    (lambda (n) ;the facrotial function
-      (if (zero? n) ;;;;;Basic factorial logic
-          1
-          (* n (self (- n 1))))))) ;Fufills y combinator by not calling itself and instead implying reccursion
-
-(define factorial (Y fact-maker))
-
-(factorial 0)  ; ⇒ 1
-(factorial 5)  ; ⇒ 120
-(factorial 10) ; ⇒ 3628800
-
-( define sum-maker
-   (lambda(self)
-     (lambda(n)
-       (cond
-         ((= n 0)0)
-         (else
-          (+ n( self( - n 1)))))))) ;remeber to always refer to self, function is just there to be named
-
-(define sumation( Y sum-maker)) ;this would make the function so Y would swallow sum-maker
-
-(sumation 5)
-(sumation 0)
-(sumation 10)
-(sumation 1)
-(sumation 6)
-
-(define len-list ;global name
-  (lambda(self)  ; reccur on
-    (lambda(lst)  ;this is the inside fucntion where all the applications go through
-      (cond
-        ((null? lst) 0)
-        (else
-         (+ 1(self (cdr lst))))))))
-
-(define list-len( Y len-list))
-
-(list-len '( 1 2 3 4 ))
-
-
-;Okay now that we got all the defention stuff out of the way, how can this useful feature be integreated into our TLS??
-;So if we refer back to 1.3, we changed the enviorment so we can simply build on top of it.
-; we also have to refer to our meaning function since,
-
-;TLS_REC_IMPLEMENTATION
-
-(define initial-env
-  (extend-env                
-   'Y
-   (build 'non-primitive      
-          (meaning            
-           '(lambda (f)
-              ((lambda (x) (f (lambda (v) ((x x) v))))
-               (lambda (x) (f (lambda (v) ((x x) v))))))
-           '())              
-          )
-   empty-env))
-
-
-; we also have to change our value function from
-;(define (value e)
-  ;(meaning e '()))  to something that will accept the Y-combinator
-
-;since we already defined our inital-env we can simply pass it to value
-
-(define (value e)
-  (meaning e initial-env))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-;-------------------------------------------------------------------------------------------------
 
 
 
@@ -1344,61 +1054,11 @@
 
 
 
-;test cases from professor. these were posted on MS Teams.
-(value '((lambda (x) (add1 x)) 3))
-;this returns 4
-
-
-(value '((lambda (x) (add1 x))
-	 ((lambda (x) (add1 x)) 4)))
-;this returns 6
-
-
-(value '(((lambda (y)
-            (lambda (x) (cons x y)))
-          3)
-         4))
-;this returns (4 . 3)
-
-
-(value '((lambda (x z)
-           (cons x
-                 ((lambda (x y) (cons z x))
-                  3 4)
-                 ))
-         1 2))
-;this returns (1 2 . 3)
-
-
-(value '((lambda (f y)
-          (f y))
-        (lambda (x) (add1 x))
-        4))
-;this returns 5
-
-
-(value '((lambda (f y)
-	   (f y))
-	 ((lambda (x) (cond ((number? x) add1)
-			    (else (lambda (y) (cons x y)))))
-	  (quote z))
-	 3))
-;this returns (z . 3)
-
-
-(value '((lambda (x)
-             ((lambda (f)
-                (cons x ((lambda (x) (f x))
-                         3)))
-              (lambda (y) (cons x y))))
-         2))
-;this returns (2 2 . 3)
-
 
 ;------------------------------------------------------------------------------------------------
 
 
-;1.7
+;1.7 ;NOT COMPATIBLE WITH TLS YET,, FIXES NEEDED
 
 ;1.7 asks to equip our TLS interperter with the Y-Combinator
 
@@ -1576,17 +1236,19 @@
 
 ;TLS_REC_IMPLEMENTATION
 
-(define initial-env
-  (extend-env                
+
+
+
+(define initial-env 
+  (extend-env  
    'Y
-   (build 'non-primitive      
-          (meaning            
-           '(lambda (f)
-              ((lambda (x) (f (lambda (v) ((x x) v))))
-               (lambda (x) (f (lambda (v) ((x x) v))))))
-           '())              
-          )
+   (meaning
+     '(lambda (f)
+        ((lambda (x) (f (lambda (v) ((x x) v))))
+         (lambda (x) (f (lambda (v) ((x x) v))))))
+     empty-env)
    empty-env))
+
 
 
 ; we also have to change our value function from
@@ -1599,6 +1261,56 @@
   (meaning e initial-env))
 
 
+
+;test cases from professor. these were posted on MS Teams.
+(value '((lambda (x) (add1 x)) 3))
+;this returns 4
+
+
+(value '((lambda (x) (add1 x))
+	 ((lambda (x) (add1 x)) 4)))
+;this returns 6
+
+
+(value '(((lambda (y)
+            (lambda (x) (cons x y)))
+          3)
+         4))
+;this returns (4 . 3)
+
+
+(value '((lambda (x z)
+           (cons x
+                 ((lambda (x y) (cons z x))
+                  3 4)
+                 ))
+         1 2))
+;this returns (1 2 . 3)
+
+
+(value '((lambda (f y)
+          (f y))
+        (lambda (x) (add1 x))
+        4))
+;this returns 5
+
+
+(value '((lambda (f y)
+	   (f y))
+	 ((lambda (x) (cond ((number? x) add1)
+			    (else (lambda (y) (cons x y)))))
+	  (quote z))
+	 3))
+;this returns (z . 3)
+
+
+(value '((lambda (x)
+             ((lambda (f)
+                (cons x ((lambda (x) (f x))
+                         3)))
+              (lambda (y) (cons x y))))
+         2))
+;this returns (2 2 . 3)
 
 
 
@@ -1620,5 +1332,3 @@
 
 
 ;-------------------------------------------------------------------------------------------------
-
-
