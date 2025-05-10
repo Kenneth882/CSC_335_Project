@@ -389,6 +389,26 @@
 ;(define (*identifier e table)
   ;(apply-env table e))
 
+
+;--------------------------------------------------------------------------------------------
+;Spec analyzation
+;--------------------------------------------------------------------------------------------
+;1.3 also asks us to show that our newly defineed enviorment fufills the previous specs we defined
+;;The key functions in the Current TLS are:
+;-empty-env: returns an empty table ()
+;-build : constructs an entry from a  list of names and a list of values
+;-extend-table: preappends a new entry to the enviorment
+;-lookup in entry: searches for a name in a single entry
+;lookup-in-table:reccursivly searchs throigh the table for a binding
+
+;In our new enviorment
+;-empty-env stays as empty-env
+;-build is replaced by extend env where extend env takes a name value pair and puts it in front
+;-extend-table is replaced by extend-env* which preappaneds a new entry to the enviorment
+;-lookup-in-entry-lookup-in-table is replaced by apply which uses reccursion and as proved fufils both the singel and reccursive binding of looking up in a enviorment and table
+
+
+
 ;------------------------------------------------------------------------------------------------
 ;Overall analysis and conclusion
 ;-----------------------------------------------------------------------------------------------
@@ -583,13 +603,42 @@
  10)
 
 ;--------------------------------------------------------------------------------
+;1.3 and 1.4 Relatshonship
+;--------------------------------------------------------------------------------
+;1.3 asks us to fin
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 ;---------------------------------------------------------------------------------
-;1.3 and 1.4 Relatshonship
 ;--------------------------------------------------------------------------------
+
+
+
 
 ; BASIC HELPER FUNCTIONS. These are basic functions such as atom?, add1, etc.
 ; Or they are functions that have been translated to R5RS Scheme.
