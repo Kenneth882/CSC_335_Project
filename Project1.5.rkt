@@ -6,6 +6,37 @@
 ;; ==================================================================================================
 
 
+;; ===================================================================================================================
+#|
+So the hardest part for this section for us was to essentially understand what it means when the problem says "standard of correctness".
+And how to actually prove it.
+Beginning with the standard of correctness, to us it means a definition of what it means for our interpreter to be correct. This means
+how we should define correct behavior, what the interpreter should do for a given input, and ultimately prove it. 
+|#
+;; ===================================================================================================================
+
+
+
+
+;; ===================================================================================================================
+;;STANDARD OF CORRECTNESS FOR OUR TLS INTERPRETER
+#|
+Our TLS interpreter is correct if for every valid TLS expression, it will return the same result as the DrRacket R5RS. Meaning that when
+we want to evaluate something in our TLS interpreter, it should return the same result if we did it in regular R5RS scheme.
+
+1) We wish to focus on the primtive operations. In TLS, there are primitives such as +, car, cdr, cons, null?, eq?, zero?, atom?, etc, etc
+and we want these to return the same result as R5RS Scheme.
+
+2) Functions. For lambda functions, TLS represents them as closures (formal parameters, body, environment) and we want to make sure that there
+is proper binding for the parameters. We want to ensure lexical scoping. And ultimately the correct evaluation of the body.
+
+3) Errors. In TLS, we are introduced to things such as build-f, entry-f, etc, etc. These are just error messages that are commonly for undefined,
+incorrect number of arguments, primitive errors. And TLS widely says the error. 
+|#
+;; ===================================================================================================================
+
+
+
 ;;; Standard of Correctness:
 ;;; The TLS interpreter is correct if for any s-expression sexps in the TLS subset,
 ;;; (evaluate sexps env(aka table) ) returns the same value that a standard R5RS Scheme
@@ -18,7 +49,6 @@
 ;;   - Quoted expressions
 ;;   - Lambda expressions
 ;;   - Conditionals (cond), (if), (else)
-
 
 (define (value e)
   (meaning e '()))
