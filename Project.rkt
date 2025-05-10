@@ -430,16 +430,16 @@
 ;Tests
 ;-----------------------------------------------------------------------------------------------------------------------------
 
-(define 1.3-env
+(define 13-env
   (extend-env* '(x y)
                '(1 2)
                (extend-env* '(z)
                             '(3)
                             empty-env)))
 
-(apply-env 1.3-env 'x) ; => 1
-(apply-env 1.3-env 'y) ; => 2
-(apply-env 1.3-env 'z) ; => 3
+(apply-env 13-env 'x) ; => 1
+(apply-env 13-env 'y) ; => 2
+(apply-env 13-env 'z) ; => 3
 ;(apply-env test-env 'a) ; => error: unbound identifier: a
 
 (define env1
@@ -599,8 +599,10 @@
  ((lambda (x)
    ((lambda (f)
       ((lambda (x) (f)) 20))
-    (lambda () x))) ; ← at this point x is bound
+    (lambda () x))) 
  10)
+
+;Since our program is Lexicaly scoped we return 10
 
 ;--------------------------------------------------------------------------------
 ;1.3 and 1.4 Relatshonship
@@ -732,9 +734,9 @@
 ; This is used to determine if an atom should be treated like a constant or a primitive procedure.
 (define (const-atom? a)
   (or (number? a)
-      (eq? a #t)
-      (eq? a #f)
-      (memq a '(cons car cdr null? eq? atom? zero? add1 sub1 number?))))
+      (eq? a #t) (eq? a #f)
+      (memq a '(cons car cdr null? eq? atom? zero? add1 sub1 number?
+                     + - * / < > <= >=))))
 
 
 ;This makes a new table. It takes formal parameters, values, and the current table. And then
@@ -990,10 +992,6 @@
       (cons (meaning (car args) table) (evlis (cdr args) table))))
 
 
-;Action for application
-(define (*application e table)
-  (tls-apply (meaning (function-of e) table)
-         (evlis (arguments-of e) table)))
 
 
 ;In TLS, the function was originally called "apply", but Scheme R5RS already has its built in apply,
@@ -1005,22 +1003,33 @@
     (else
      (error "tls-apply: not a function" fun))))
 
+;Action for application
+(define (*application e table)
+  (tls-apply (meaning (function-of e) table)
+         (evlis (arguments-of e) table)))    
+
 
 (define (tls-apply-primitive name vals)
   (cond
     ((eq? name '+) (apply + vals))
-    ((eq? name 'cons) (cons (first vals) (second vals)))
-    ((eq? name 'car) (car (first vals)))
-    ((eq? name 'cdr) (cdr (first vals)))
+    ((eq? name '-) (apply - vals))           
+    ((eq? name '*) (apply * vals))          
+    ((eq? name '/) (apply / vals))           
+    ((eq? name '<) (apply < vals))           
+    ((eq? name '>) (apply > vals))           
+    ((eq? name '<=) (apply <= vals))         
+    ((eq? name '>=) (apply >= vals))        
+    ((eq? name 'cons)  (cons  (first vals) (second vals)))
+    ((eq? name 'car)   (car   (first vals)))
+    ((eq? name 'cdr)   (cdr   (first vals)))
     ((eq? name 'null?) (null? (first vals)))
-    ((eq? name 'eq?) (eq? (first vals) (second vals)))
+    ((eq? name 'eq?)   (eq?   (first vals) (second vals)))
     ((eq? name 'atom?) (atom? (first vals)))
     ((eq? name 'zero?) (zero? (first vals)))
-    ((eq? name 'add1) (+ (first vals) 1))
-    ((eq? name 'sub1) (- (first vals) 1))
+    ((eq? name 'add1)  (+ (first vals) 1))
+    ((eq? name 'sub1)  (- (first vals) 1))
     ((eq? name 'number?) (number? (first vals)))
-    (else
-     (error "unknown primitive" name))))
+    (else (error "unknown primitive" name))))
 
 
 (define :atom?
@@ -1437,6 +1446,33 @@
 ;this returns (2 2 . 3)  
 
 
+
+ (value
+ '((Y (lambda (sum)
+        (lambda (n)
+          (cond ((zero? n) 0)
+                (else (+ n (sum (sub1 n))))))))
+   4))
+
+;->> returns 10
+
+(value
+ '((Y (lambda (fact)
+        (lambda (n)
+          (cond
+            ((zero? n) 1)
+            (else (* n (fact (sub1 n))))))))
+   4))
+;; Expected output: 24
+
+(value
+ '((Y (lambda (len)
+        (lambda (xs)
+          (cond
+            ((null? xs) 0)
+            (else (add1 (len (cdr xs))))))))
+   (quote (a b c d))))
+;; Expected output: 4
 
 
 
