@@ -362,6 +362,19 @@
 
 ;pre: takes three arguments, formals (parameter names), vals(list of corresponding values), and table(list of entries).
 ;post: returns a new table with a new entry added to the front.
+
+#|
+=============================================================================================
+Proof for extend-table:
+;;Since this line of code has no recursion we will use proof by construction:
+
+:Proof:
+;(build formals vals) -> this create a proper entry,
+;the cons prepends this entry to an existing table
+; Therefore extend-table correctly implements environment extension by proof of construction.
+=============================================================================================
+|#
+
 (define (extend-table formals vals table)
   (cons (build formals vals) table))
 ;===========================================================================================================
@@ -388,6 +401,17 @@
 
 ;pre: e is an expression that will be evaluated
 ;post: returns the evaluated value of e 
+
+#| ;fix this proof
+Proof:
+
+the function directly calls (value e) = (meaning e '())
+'() is the empty environment
+meaning is correct (refer to 1.5)
+Therefore: 
+   ∀e. (value e) = ⟦e⟧_{∅}
+|#
+
 (define (value e)
   (meaning e '()))
 ;===========================================================================================================
@@ -430,16 +454,21 @@
 ;===========================================================================================================
 ; This is the lookup-in-entry function. Accompanied with it is the lookup-in-entry-helper.
 ;===========================================================================================================
-;Design Idea:
-;when looking up the entry there will be 3 possible cases, one where the name is found in entry, it will then return the associated value with the name.
-;If it does not exist it will return the associated value once the entry-f is called.
-;The third case will be if no name is given aka an empty char/string, then we call the entry-f function.
-; ___________________
-;[_______ayp|nyp_____]------>(first entry)= ayp----->(second entry) =nyp -------->(if ayp and nyp = name then we return entry-f)
-;                                                                                   (needs helper)
+#|
+For this proof, we will use proof by induction
+;pre and post are down below
 
-;ayp: the first tables (ill go more in detail later i gotta push)
-;nyp: the remaining tables
+;Proof
+;Base Case: When names list is empty, call the function entry-f
+;IH: Assume (lookup-in-entry name (cdr entry) entry-f) works correctly for smaller lists
+
+;IS: If (car names) matches the target: it will return (car values) 
+; if this is not the case then the recursion step will commence. Recurs on (cdr names) and (cdr values)
+;By IH, this will either find the name or call entry-f
+;Therefore, lookup-in-entry correctly searches through name-value pairs.
+
+|#
+
 
 
 ;pre: takes three arguments. name (the symbol to look up), entry(a list where we essentially do the searching), entry-f(error message).
@@ -470,6 +499,22 @@
 ;===========================================================================================================
 ;pre: takes three arguments, name (what we are looking for), table (list of entries), and table-f (an error message if name is not found)
 ;;post: returns the value associated with name if it is found in table. if it does not exist, calls the table-f function.
+
+#|
+This is the proof for lookup-in-table
+For this proof, we will use structural induction
+
+;Proof:
+Base Case:when tables is null, call the function table-f
+
+IH: Assume (lookup-in-table name (cdr table) table-f) works correctly
+IS: the function Tries (lookup-in-entry) on (car table)
+If it is not found, we will recur on (cdr table)
+By IH, this will search the remaining values correctly
+
+Therefore, lookup-in-table works correctly.
+|#
+
 (define (lookup-in-table name table table-f)
    (cond
      ((null? table)(table-f name))
@@ -646,6 +691,21 @@
 
 ;pre: takes two arguments. lines is a list of cond clauses. table is the current environment
 ;post: evaluates and returns the result of the first valid clause action.
+
+#| ; fix this proof
+Proof for Evcon using Structural Induction
+Base Case: idk!
+
+IH:Assume (evcon (cdr lines) table) evaluates remaining clauses correctly
+
+Inductive Step:
+Evaluates (question-of (car lines)) using meaning
+If true/else: returns (answer-of (car lines))
+Else: recurs on (cdr lines)
+By IH, this handles the remaining clauses properly
+This shows evcon correctly implements the cond semantics.
+|#
+
 (define (evcon lines table)
   (cond
     ((else? (question-of (car lines))) (meaning (answer-of (car lines)) table))
@@ -660,6 +720,21 @@
 ;of each argument.
 ;pre: takes two parameters. arguments is what needs to be evaluated. table is the current environment
 ;post: returns a list of the evaluated arguments
+
+#| ; this also need to be fixed
+Proof for evlis using
+structural induction
+Base case: when args is null, it returns correct value ; this is wrong
+
+IH: Assume (evlis (cdr args) table) evaluates remaining args correctly
+
+IS: the function Evaluates (car args) using meaning function
+it then cons onto recursive call with (cdr args)
+By IH, (cdr args) evaluates correctly
+
+Therefore, evlis properly evaluates argument lists
+
+|#
 (define (evlis args table)
   (if (null? args)
       '()
@@ -679,6 +754,21 @@
 
 ;pre: this takes two arguments. name (symbol representing the primitive op name). vals (a list of arguments).
 ;post: applies the operation and then returns the result. if it is not recognized, we return an error.
+
+#| ; adjust the language
+Proof for tls-apply-primitive
+
+Case Analysis Proof:
+1. +: Applies R5RS addition 
+2. cons: Creates pair 
+3. car: Returns head of list (with error check) 
+4. cdr: Returns tail 
+5. null?: Checks emptiness 
+6. eq?: Tests equality 
+7. Default: Raises error 
+
+Therefore all primitives are correctly implemented.
+|#
 (define (tls-apply-primitive name vals)
   (cond
     ((eq? name '+) (apply + vals))
@@ -716,6 +806,17 @@
 ;pre: takes two arguments. fun (value expected to be prim or non-prim. vals is a list of argument values
 ;post: if fun is primitive, it applies tls-apply-primitive and returns. if non-primitive, applies closure and returns.
 ;      else error message.
+
+#| ;also needs to be fixed
+Proof for TLS-Apply
+
+Proof by cases:
+1. primitive?: Delegates to tls-apply-primitive 
+2. non-primitive?: Delegates to tls-apply-closure 
+3. Else: Raises "not a function" error 
+
+Therefore, tls-apply is implememnted correctly.
+|#
 (define (tls-apply fun vals)
   (cond
     ((primitive? fun) (tls-apply-primitive (cadr fun) vals))
@@ -743,6 +844,17 @@
 ;pre: closure is a list with at least three elements: saved environment, formals list, and body expression;
 ;      vals is a list of argument values.
 ;post: extends saved environment with formals bound to vals, evaluates body in the new environment, and returns the result.
+
+#|
+Proof for Tls-apply-closure
+
+Proof:
+1. Unpacks (table formals body) from closure
+2. Creates new env via (extend-table formals vals table)
+3. Evaluates body in new env via meaning 
+
+Hence, closures are applied correctly.
+|#
 (define (tls-apply-closure closure vals)
   (let*
       ((saved (first closure))
