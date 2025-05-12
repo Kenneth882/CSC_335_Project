@@ -402,7 +402,28 @@
 
 
 
+;===========================================================================================================
+; This is the build function. It creates entry and validates that the names list has no dupes and
+; the names list and values list are the same length. And then it returns the entry.
+;===========================================================================================================
 
+;;pre: takes two arguments, s1 and s2 which can be any valid Scheme values
+;;post: returns a list of two elements, s1 is first and then s2 is second
+(define build
+  (lambda (s1 s2)
+    (cons s1 (cons s2 '()))))
+
+
+;Testing the function
+; (build '(x y z) '(1 2 3))             ;returns ((x y z) (1 2 3))
+; (build '((a . 1) (b . 2)) '((x . 9))) ;(((a . 1) (b . 2)) ((x . 9)))
+; (build '(a (b c)) (build '(x) '(1)))  ;((a (b c)) ((x) (1)))
+
+
+
+;;pre: takes two arguments, a list of names as first. and second is a list of the values associated
+;;post: returns a new environment entry
+(define new-entry build)
 
 
 
@@ -538,33 +559,6 @@
 ; (check-equal-len-list '() '(1 2 3))                                ;returns #f
 ; (check-equal-len-list '() '())                                     ;returns #t
 ; (check-equal-len-list '(1 2 (lambda (x) x)) '(a b (lambda (y) y))) ;returns #t
-
-
-
-
-
-;===========================================================================================================
-; This is the build function. It creates entry and validates that the names list has no dupes and
-; the names list and values list are the same length. And then it returns the entry.
-;===========================================================================================================
-
-;pre: this takes two? three? arguments. names, values, and build-f (an error function). FIX THIS PRE CONDITION!
-(define build list)
-(define new-entry build) ;this is straight from TLS. Need to fix this section.
-
-;post: returns an entry if names has no duplicates and names and values are of equal length. otherwise, returns
-;the appropriate error message. 
-
-
-;Testing the function
-; (build '(x y z) '(1 2 3))     ;returns ((x y z) (1 2 3))
-; (build '(x y z) '(1 2 3 4))   ;returns value error.
-; (build '(x x y z) '(1 2 3 4)) ;returns name error
-
-
-
-
-
           
 
 
@@ -650,7 +644,8 @@
 
 
 
-;; evcon : list-of-cond-clauses table → value
+;pre: takes two arguments. lines is a list of cond clauses. table is the current environment
+;post: evaluates and returns the result of the first valid clause action.
 (define (evcon lines table)
   (cond
     ((else? (question-of (car lines))) (meaning (answer-of (car lines)) table))
@@ -663,6 +658,8 @@
 
 ;Takes a list of arguments and a table, and then returns a list composed of the meaning
 ;of each argument.
+;pre: takes two parameters. arguments is what needs to be evaluated. table is the current environment
+;post: returns a list of the evaluated arguments
 (define (evlis args table)
   (if (null? args)
       '()
