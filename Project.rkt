@@ -205,6 +205,20 @@
 ; I also cleaned up 1.2 file and added some specs we missed. 
 ; Fixed some errors as well.
 
+; 5/5/25 - Alexis (Comments Below)
+; This was a very busy week due to exams and other projects for other classes. I spent most of today researching different kinds of proof
+; such as structural, case, construction, etc. I also used the proofs the professor provided in class. 
+; I then started practicing making the proofs for our code
+
+5/7/25 - Alexis (Comments Below)
+; I started working on section 1.5, and I opted to use structural induction. My thought process was this: to prove we implemented
+; the TLS interpreter correctly, we will need to know the standard of correctness. We will also need to prove functions like 
+; meaning, value, expression-to-action, etc. Overall making into one big proof for our interpreter. 
+
+5/8/25 - Alexis (Comments Below)
+; Today I collaborated with Hamim mostly. I worked on 1.1 specs since after our meeting with the professor, it was clear we needed a lot of improvements.
+; Along with improving 1.6 and completing it with hamim. 
+; I also worked on 1.5 today making proofs for other functions in 1.1. 
 
 ; 5/8/25 - Hamim (Comments Below)
 ; So today was the first day that I was able to work on this for a while because I had exams + projects for other classes. However, I spent all day today working on
