@@ -19,27 +19,28 @@
 So let's start with focusing on DrRacket for a bit. This is what we use to implement Scheme, EOPL, and other
 different languages. The TLS Interpreter is written in Scheme. And in "The Little Schemer" it says that:
 
-" It is our belief that writing programs recursively in Scheme is essentially simple pattern recognition. Since
+"It is our belief that writing programs recursively in Scheme is essentially simple pattern recognition. Since
 our only concern is recursive programming, our treatment is limited to the whys and wherefores of just a few
 Scheme features: car, cdr, cons, eq?, null?, zero?, add!, sub!, number?, and, or, quote, lambda, define, and
 cond. Indeed, our language is an idealized Scheme."
 
 TLS handles the high-level work because it does a lot; it parses the expression, meaning it takes the raw input and
 then breaks it down into structural parts. Looking for parameters, functions, and arguments. It then decides what kind of
-operator it is, by using primitive, non-primitive, etc. It creates environments and extends them. And it knows when call
-primitives or apply user functions. Meanwhile R5RS, the TLS interpreter relies on it for low-level execution, like executing
-the operations and run the Scheme code itself.
-TLS fully controls the high-level things such as breaking down expressions, creating and applying closures, building and extending
+operator it is, by expression-to-action. It can also use list-to-action, atom-to-action. But more commonly it uses expression.
+It creates environments and extends them. And it knows when to call primitives or apply user functions. Meanwhile R5RS, the TLS
+interpreter relies on it for low-level execution, like executing the operations and run the Scheme code itself.
+TLS fully controls the high level things such as breaking down expressions, creating and applying closures, building and extending
 environments, and determining when and where a primitive needs to be applied. However, whenever a primitive operation is met,
-TLS calls into the underlying Scheme system to perform the actual low-level computation.
+TLS calls into the Scheme system to perform the actual low level computation.
 
 
 Focusing on the operations above, let's primarily focus on car, cdr, and cons as a working example. What TLS does is that
-it sees these primitives, recognizes them, and wraps them. That is why we have (primitive car), (primitive cdr), etc. This
+it sees these primitives, recognizes them, and wraps them. That is why we have (primitive car), (primitive cdr), as the return. This
 is why there exists primitive, non-primitive, and apply-primitive. 
 ;((expression-to-action 'car) 'car '())       ;returns (primitive car)
 ;((expression-to-action 'cdr) 'cdr '())       ;returns (primitive cdr)
 ;((expression-to-action 'cons) 'cons '())     ;returns (primitive cons)
+
 
 What R5RS does here it that it actualy implements the primitives car, cdr, cons, etc. The way I think of it is a big helping
 hand relationship.
@@ -61,8 +62,8 @@ and handles the low-level operations like +, car, cons, etc.
 
 
 #|
-Now in the focus of function calling and the mechanics for that. The TLS interpreter focuses a lot on closures while R5RS focuses on
-lambdas usually. The interpreter is responsible for breaking down expressions and it does it in a smart way. So if we have a lambda function
+Now in the focus of function calling and the mechanics for that. The TLS interpreter builds closures from lambda expressions but R5RS does this
+regularly when evaluating lambdas. The interpreter is responsible for breaking down expressions and it does it in a smart way. So if we have a lambda function
 in the interpreter, it builds a closure. A closure is a data structure and it has parameters, body, and an environment.
 (define (tls-apply-closure closure vals)
   (let*
