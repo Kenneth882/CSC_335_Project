@@ -122,7 +122,25 @@ booleans should return themselves.
 ; (value '((lambda (x) (add1 x)) 99))                        ;100
 ; (value '(((lambda (x) (lambda (y) (cons x y))) 'a) 'b))    ;(a . b)
 ; (value '((lambda (x y) (cons x (cons y '()))) 'a 'b))      ;(a b)
+;Here lambda expressions are turned to closures, parameters are bounded, and the final values match with what R5RS Scheme would return.
 
+
+
+;Now let's focus on number 3, errors. In TLS, a lot of the functions have an extra parameter that ends in -f. These are usually build-f, table-f, or
+;something of that nature. These basically do the same thing as Scheme and returns an error message but they are used in certain cases. For example
+;entry-f is used when we try to find a variable not found in the environment. And in our interpreter, we generate these error messages.
+;(define (entry-f name)
+;   (begin
+;     (display "Error:")
+;     (display name)
+;     (display "not in values.")
+;      (newline)#f))
+
+;(value '((lambda (x y) x) 1))  ;returns error
+;(value '(car 5))               ;returns error
+;(value '(5 3))                 ;returns error
+;Although these messages may not be identical to R5RS errors, the conditions under which errors occur match. It's basically like entry-f is the Scheme error
+;for undefined variable. build-f is the error for invalid. And ultimately, it does meet our standard of correctness.
 
 
 
