@@ -1190,7 +1190,6 @@
 ;------------------------------------------------------------------------------------------------
 
 
-;1.7 ;NOT COMPATIBLE WITH TLS YET,, FIXES NEEDED
 
 ;1.7 asks to equip our TLS interperter with the Y-Combinator
 
