@@ -68,9 +68,9 @@
 ;the enviorment and module dispatch
 
 ;How does this work??
-;This is mainly used to check if an epxr is valid under TLS rules and simply retuns a #t or a #f based on it.
-;at first it simply checks the constants and varibles and then if the expr is a special form it is in charge of
-;sending that expr into its check function which then checks if that special form is valid.
+;This is mainly used to check if an epxr is valid under TLS rules and simply returns a #t or a #f based on it.
+;at first it simply checks the constants and variables and then if the expr is a special form it is in charge of
+; sending that expr into its check function, which then checks if that special form is valid.
 (define (syntax-checker expr env tls)
   (cond
     ((constant? expr) #t)
@@ -92,10 +92,10 @@
     (else #f)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Arity Checking
+;; Checking
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;Simple checker for condtions and correct Arity.
+;Simple checker for conditions and correct Arity.
 (define (conditions name vals)
   (cond
     ((or (eq? name 'car) (eq? name 'cdr) (eq? name 'first)
@@ -112,7 +112,7 @@
     (else #f)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Form Checkers
+;; Structure Checkers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;This is based around the strcuture of (if test then else): so we need len 4.
