@@ -12,7 +12,7 @@
 #|
 So the hardest part for this section for us was to essentially understand what it means when the problem says "standard of
 correctness". And how to actually prove it.
-Beginning with the standard of correctness, to us it means clearly defining what it means for our interpreter to work correctly.
+Beginning with the standard of correctness, we understand it as: what it means for our interpreter to work correctly.
 This includes what it should do for a given input and proving that it behaves as expected.
 |#
 ;; ===================================================================================================================
@@ -207,5 +207,121 @@ Case 5: (cond (qi ai) ... (else an))
 (value '(cond ((#f 'wrong) (else 'right)))) ; => right
 (value '((lambda (x) (add1 x)) 3)) ; => 4
 (value '(((lambda (x) (lambda (y) (cons x y))) 1) 2)) ; => (1 . 2)
+
+|#
+
+#|
+Now let's look at conditionals. As we know in TLS, conditionals are handled through the cond special form.
+In addition to the else? predicate. Looking at our interpreter it handles these by recognizing cond expressions through 
+the list-to-action function. It then process the clauses correctly through evcon.
+
+(define (*cond e table)
+  (evcon (cond-lines-of e) table))
+
+(define (evcon lines table)
+  (cond
+    ((else? (question-of (car lines))) 
+     (meaning (answer-of (car lines)) table))
+    ((meaning (question-of (car lines)) table)
+     (meaning (answer-of (car lines)) table))
+    (else
+     (evcon (cdr lines) table))))
+
+
+(value '(cond (else 5)))                 ;returns 5
+(value '(cond (#f 1) (#t 2) (else 3)))  ;returns 2
+(value '(cond (#f 1) (#f 2) (else 3)))  ;returns 3
+(value '(cond (#f 1)))                  ;returns error
+; As we can see each results matches what we'd expect in TLS and R5RS. When there is no conditions just an else statement
+; in both tls and R5RS the else value will be returned. When one condtion is true then it will return the the value associated with the condition
+: when both condition are false then we will return the else value. All of this holds true for TLS and R5RS. This shows that it does meet our standard of correctness.
+
+Now lets move onto the proofs
+
+=============================================
+Base Cases
+=============================================
+
+;Base case 1: (cond (else e))
+;(meaning '(cond (else e)) table) → 
+;(*cond '(cond (else e)) table) → 
+;(evcon '((else e)) table) → 
+;(meaning e table)
+;Semantics: [cond (else e)]table = [e]table
+
+;Base case 2: (cond)
+;(meaning '(cond) table) → 
+;(*cond '(cond) table) → 
+;(evcon '() table) → 
+;error (no else clause)
+;Matches TLS behavior
+
+;=============================================
+;Inductive Cases
+;=============================================
+;Case 1:
+(cond (q1 a1) ... (else an)). 
+;1. Evaluate q1 via (meaning q1 table)
+;2. If #t: return (meaning a1 table)
+;3. If #f: recur on remaining clauses
+;4. Final else acts as base case
+
+;By construction, this implements proper cond semantics:
+;- Evaluates conditions in order
+;- Returns first true branch
+;- Handles else as catch-all
+
+|#
+;Now let's focus on number 5, atoms. In TLS and Scheme, atomic expressions like
+;numbers, booleans, and primitive symbols evaluate to themselves. Our interpreter
+;handles these through the atom-to-action dispatcher and *const action.
+
+(define (atom-to-action e)
+  (cond
+    ((const-atom? e) *const)
+    (else *identifier)))
+
+(define (*const e table)
+  (cond
+    ((number? e) e)
+    ((eq? e #t) #t)
+    ((eq? e #f) #f)
+    (else
+     (build 'primitive e))))
+
+;The test cases that go along with this
+;(value '5)        ;returns 5
+;(value '#t)       ;returns #t
+;(value 'cons)     ;returns (primitive cons)
+;(value '(atom? 5)) ;returns #t
+
+;As we can see the result matches both TLS and R5RS behavior correctly.
+
+#|
+Moving onto the proofs for atom
+
+;=============================================
+;Base Cases
+;=============================================
+;Base case 1: n is an integer
+;(meaning n table) → (*const n table) → n
+;Semantics: [n]table = n
+; Since n is an integer it will evaluate to itself.
+
+;Base case 2: we input a boolean
+;(meaning #t table) → (*const #t table) → #t
+;(meaning #f table) → (*const #f table) → #f
+; Boolean primitives #t and #f will evaluate to themselves
+
+;Base case 3: Primitive symbols (cons, car, cdr, etc.)
+;(meaning 'cons table) → (*const 'cons table) → 
+;(primitive cons)
+;Semantics: [prim]table = tagged primitive
+
+More test cases:
+;1. Numbers: (atom? 5) → #t
+;2. Symbols: (atom? 'x) → #t
+;3. Pairs: (atom? '(1 2)) → #f
+;4. Empty: (atom? '()) → #f
 
 |#
