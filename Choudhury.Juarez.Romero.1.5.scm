@@ -7,7 +7,6 @@
 
 
 
-
 ;; ===================================================================================================================
 #|
 So the hardest part for this section for us was to essentially understand what it means when the problem says "standard of
@@ -38,10 +37,10 @@ incorrect number of arguments, and primitive errors. And TLS widely says the err
 
 4) Conditionals. In TLS and Scheme, we have cond, if, and else? These should go into the correct branch and return the result associated with that branch. We
 can have long conditional statements, but regardless, it should return the right answer. It's sort of like our names and values. Names is the branch and then we
-return the value associated with the name.
+return the value associated with the name. In TLS, this mimics R5RS. 
 
 5) Atoms. We have an atom? In TLS, and we can make it in R5RS Scheme. If we have an atomic expression, it should always return itself. Meaning numbers and
-Booleans should return themselves.
+Booleans should return themselves. Constants evaluate to themselves. 
 |#
 
 
@@ -271,6 +270,9 @@ Base Cases
 ;- Returns first true branch
 ;- Handles else as catch-all
 
+
+
+
 |#
 ;Now let's focus on number 5, atoms. In TLS and Scheme, atomic expressions like
 ;numbers, booleans, and primitive symbols evaluate to themselves. Our interpreter
@@ -296,6 +298,9 @@ Base Cases
 ;(value '(atom? 5)) ;returns #t
 
 ;As we can see the result matches both TLS and R5RS behavior correctly.
+
+
+
 
 #|
 Moving onto the proofs for atom
