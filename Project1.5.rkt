@@ -23,25 +23,25 @@ This includes what it should do for a given input and proving that it behaves as
 ;; ===================================================================================================================
 ;;STANDARD OF CORRECTNESS FOR OUR TLS INTERPRETER:
 #|
-Our TLS interpreter is correct if, for every valid TLS expression, it produces the same result as R5RS Scheme where the expression is within the subset of
+Our TLS interpreter is correct if, for every valid TLS expression, it produces the same result as R5RS Scheme, where the expression is within the subset of
 Scheme supported by The Little Schemer (TLS). That means our interpreter should evaluate expressions in the same way as an R5RS interpreter, assuming pure
 functional behavior and TLS-specific constraints.
 
-1) Primitives. We wish to focus on the primtive operations. In TLS, there are primitives such as +, car, cdr, cons, null?, eq?, zero?, atom?, etc, etc
-and we want these to return the same result as R5RS Scheme.
+1) Primitives. We wish to focus on the primitive operations. In TLS, there are primitives such as +, car, cdr, cons, null?, eq?, zero?, atom?, etc, etc
+And we want these to return the same result as R5RS Scheme.
 
-2) Functions. For lambda functions, TLS represents them as closures (formal parameters, body, environment) and we want to make sure that there
-is proper binding for the parameters. We want to ensure lexical scoping. And ultimately the correct evaluation of the body.
+2) Functions. For lambda functions, TLS represents them as closures (formal parameters, body, environment), and we want to make sure that there
+is proper binding for the parameters. We want to ensure lexical scoping. And ultimately, the correct evaluation of the body.
 
 3) Errors. In TLS, we are introduced to things such as build-f, entry-f, etc, etc. These are just error messages that are commonly for undefined,
-incorrect number of arguments, primitive errors. And TLS widely says the error.
+incorrect number of arguments, and primitive errors. And TLS widely says the error.
 
 4) Conditionals. In TLS and Scheme, we have cond, if, and else? These should go into the correct branch and return the result associated with that branch. We
-can have long conditional statements but regardless it should return the right answer. It's sort of like our names and values. Names is the branch and then we
+can have long conditional statements, but regardless, it should return the right answer. It's sort of like our names and values. Names is the branch and then we
 return the value associated with the name.
 
-5) Atoms. We have an atom? in TLS and we can make it in R5RS Scheme. If we have an atomic expression, it should always return themselves. Meaning numbers and
-booleans should return themselves.
+5) Atoms. We have an atom? In TLS, and we can make it in R5RS Scheme. If we have an atomic expression, it should always return itself. Meaning numbers and
+Booleans should return themselves.
 |#
 
 
