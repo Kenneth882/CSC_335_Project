@@ -1,9 +1,9 @@
-;This will be the syntax checker for TLS
+; This will be the syntax checker for TLS
 
-;Design idea for Inductive defeniton
+; Design idea for Inductive definition
 
-; So given the language of TLS we are supposed to create a syntax checker that checks if what the user put in as code
-;has correct syntax which include but not limited to
+; So given the language of TLS, we are supposed to create a syntax checker that checks if what the user puts in as code
+;has correct syntax, which includes butis  not limited to
 ;;     basic errors such as malformed cond and lambda expressions; (ii) detect when primitives are
 ;;     applied to the wrong number of arguments; and (iii) detect the presence of unbound variables.
 
@@ -11,13 +11,14 @@
 (load "Project.rkt") 
 
 
-;In class we went over the specifications of a "Module Dispatch" and how it should work in the TLS system with the syntax checker
-;this will serve as out dispatch where we 
+; In class, we went over the specifications of a "Module Dispatch" and how it should work in the TLS system with the syntax checker
+; this will serve as our dispatch where we 
+; In class, we also learned how s-expression can be more than what is shown in "Almost TLS" so we will have to account for that as well.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; TLS Module Dispatch (Used by Syntax Checker)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; this is our dispatch which can be called anywhere in our syntax-checker to refer to to avoid redundency.
+; this is our dispatch which can be called anywhere in our syntax-checker to refer to, to avoid redundancy.
 ;The tls-module is the function and the dispatch serves as the data value
 (define (tls-module dispatch)
   (cond
@@ -95,7 +96,7 @@
 ;; Checking
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;Simple checker for conditions and correct Arity.
+; Simple checker for conditions and correct Arity.
 (define (conditions name vals)
   (cond
     ((or (eq? name 'car) (eq? name 'cdr) (eq? name 'first)
@@ -115,9 +116,9 @@
 ;; Structure Checkers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;This is based around the strcuture of (if test then else): so we need len 4.
-;we test that all the parts  follow the Tls syntax so that an if without an else would be unvalid
-; or a if with too many parts would also be unvalid, so our if has to fufill the requirments
+; This is based around the structure of (if test then else): so we need len 4.
+; we test that all the parts  follow the TLS syntax so that an if without an else would be invalid
+; or a if with too many parts would also be invalid, so our if has to fulfill the requirements
 
 (define (check-if expr env tls)
   (and (= (length expr) 4)
@@ -130,8 +131,9 @@
 ;(syntax-checker '(if x 1 2 3) '(x) tls)       ; → #f (too many parts)
 
 
-;This function checks for define: We ensure that our "x" value has to be a symbol and that our parameters
-;have to be unique
+; This function checks for define: We ensure that our "x" value has to be a symbol and that our parameters
+; have to be unique
+
 (define (check-define expr env tls)
   (cond
     ((symbol? (second expr))
@@ -147,7 +149,7 @@
 
 ;Checks for lambda where the form must be in (lambda(parameters) body) hence the length 3
 ; we ensure that our parameters must be a list of symbols, and that we have no duplicates as well as
-;our body being valid an enviorment extendned with those parameters
+; our body being valid and an environment extended with those parameters
 (define (check-lambda expr env tls)
   (and (= (length expr) 3)
        (let ((params (second expr))
@@ -160,7 +162,7 @@
 ;(syntax-checker '(lambda (x x) (+ x 1)) '() tls)       ; → #f
 ;(syntax-checker '(lambda x (+ x 1)) '() tls)           ; → #f (params not a list)
 
-;This is our check-cond: in each call we test that each clause MUST be a list
+; This is our check-cond: in each call, we test that each clause MUST be a list
 ; and that the last and only last part has to  be an else
 (define (check-cond expr env tls)
   (define (clause-check lst)
@@ -190,18 +192,27 @@
 ;; Free Variable Detection
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-
+; This function checks whether a given element x appears in the list last.
+;; If the list is empty, then x is not found.
+; we keep on doing this until x is found or not found.
 (define (element-lst? x lst)
   (cond ((null? lst) #f)
         ((equal? x (car lst)) #t)
-        (else (element-lst? x (cdr lst)))))
+        (else (element-lst? x (cdr last)))))
 
+; This function returns the union of two lists, preserving order and avoiding duplicates.
+; How it works:
+; If the first list is empty, the union is simply the second list.
+; If the first element of lst1 already appears in lst2, skip it and continue.
+; Otherwise, include the first element of lst1 in the result and continue.
 (define (union-lst lst1 lst2)
   (cond ((null? lst1) lst2)
         ((element-lst? (car lst1) lst2) (union-lst (cdr lst1) lst2))
         (else (cons (car lst1) (union-lst (cdr lst1) lst2)))))
 
+; This function computes the free variables of an expression expr,
+; given a list of already bound variable names in bound.
+;How it works:
 (define (free-vars expr bound)
   (cond
     ((symbol? expr)
@@ -225,6 +236,7 @@
                 (free-vars (cdr expr) bound)))
     ((null? expr) '())
     (else '())))
+
 
 (define (unbound-vars expr)
   (free-vars expr '()))
