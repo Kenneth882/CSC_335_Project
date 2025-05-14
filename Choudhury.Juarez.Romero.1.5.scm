@@ -95,7 +95,10 @@ Booleans should return themselves. Constants evaluate to themselves.
 
 ;; ===================================================================================================================
 ;; PROVING THAT THE IMPLEMENTATION OF OUR TLS INTERPRETER MEETS THE STANDARD
+;; ===================================================================================================================
 
+
+;; ===================================================================================================================
 ;Let's focus on number 1, primitives. In TLS, cons, car, cdr, null, eq?, etc, etc are constants. We know this because in the atom-to-action
 ;function listed above, they're *const. Each primitive should be applied correctly. 
 
@@ -111,8 +114,14 @@ Booleans should return themselves. Constants evaluate to themselves.
 ; Each result matches what we'd expect in TLS and R5RS Scheme for these primitives. This proves that our interpreter correctly recognizes
 ; these primitive symbols and applies them correctly. Keep in mind that for TLS, we don't have +, *, -, /, we need to make things like add1, sub1.
 
+; Base Case: Each primitive is represented by a constant function returned from atom-to-action, like in lines 102-105
+; IH: Assume that for all arguments k1, k2, ..., kn passed to a primitive, each ki is evaluated correctly by TLS and gives the correct value
+;     expected by R5RS.
+; IS: For each primitive that we have defined, we can apply it using value and then confirm with R5RS. This can be shown in lines 106-110. 
+;; ===================================================================================================================
 
 
+;; ===================================================================================================================
 ;Now let's focus on number 2, functions. In TLS, functions can be specified in a special way. Lambda expressions define functions but they are
 ;represented as closures. A closure has formal parameters, the body, and the environment. So for us we use expression-to-action to find a lambda
 ;function because it uses list-to-action too. And then by *lambda, we make the closure. And *application, applies the closure by evaluating the
@@ -123,8 +132,15 @@ Booleans should return themselves. Constants evaluate to themselves.
 ; (value '((lambda (x y) (cons x (cons y '()))) 'a 'b))      ;(a b)
 ;Here lambda expressions are turned to closures, parameters are bounded, and the final values match with what R5RS Scheme would return.
 
+; Base Case: A lambda expression and a primitive is essentially defined via expression-to-action which uses list-to-action and atom-to-action.
+;            If it is a user defined lambda, it goes to list-toaction and then *lambda makes a closure (formal parameters, body, and environment)
+; IH: Assume that any expressioin within the lambda body or closure environment will return the correct result as R5RS Scheme.
+; IS: So in the interpreter, when the lambda is evaluated, it makes a closure. And this in the closure, the arguments are evaluated, then the
+;     arguments are bounded to them, and then the body is evaluated in the environment. This is shown in lines 129-132.
+;; ===================================================================================================================
 
 
+;; ===================================================================================================================
 ;Now let's focus on number 3, errors. In TLS, a lot of the functions have an extra parameter that ends in -f. These are usually build-f, table-f, or
 ;something of that nature. These basically do the same thing as Scheme and returns an error message but they are used in certain cases. For example
 ;entry-f is used when we try to find a variable not found in the environment. And in our interpreter, we generate these error messages.
@@ -140,6 +156,11 @@ Booleans should return themselves. Constants evaluate to themselves.
 ;(value '(5 3))                 ;returns error
 ;Although these messages may not be identical to R5RS errors, the conditions under which errors occur match. It's basically like entry-f is the Scheme error
 ;for undefined variable. build-f is the error for invalid. And ultimately, it does meet our standard of correctness.
+
+; Base Case: : TLS defines error-handling by making functions like entry-f, build-f, and table-f to give errors like R5RS Scheme: undefined, invalid.
+; IH: Assume that for any expression that results in an error in TLS it will return a similar error in R5RS.
+; IS: While the exact error messages can be different from R5RS, they essentially say the same thing. And it is shown in lines 154-158.
+;; ===================================================================================================================
 
 
 
