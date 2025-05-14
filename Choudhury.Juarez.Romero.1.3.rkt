@@ -213,7 +213,7 @@
 
 
 ;If we were to replace all the enviorment and its associated functions into 1.1 we would still have a running prototype that is compatible with
-;our syntax checker and the interpeter!
+;our syntax checker and the interpeter! (For  future reference 1.7 takes the new enviorment and reference functions and applies it to the Y-combinator)
 ;----------------------------------------------------------------------------------------------------------------------------
 ;Tests
 ;-----------------------------------------------------------------------------------------------------------------------------

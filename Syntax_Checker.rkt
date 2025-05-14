@@ -3,7 +3,15 @@
 (load "Project.rkt")
 
 
-;Y COMB implementation needed.
+;change load  to the modulo dispatch we discussed in class
+
+(define (tls-module dispatch)
+  (cond
+    ((eq? dispatch 'primitives) primitive-names)
+    ((eq? dispatch 'special-forms) special-forms)
+    ((eq? dispatch 'env-initial) initial-env) ; your TLS 1.3 environment
+    ((eq? dispatch 'value) value) ; main entry point to interpreter
+    (else (error "Unknown dispatch key:" dispatch))))
 
 
 
@@ -336,6 +344,8 @@
                                    (syntax-checker e env))
                                  (cdr clause))
                        (loop (cdr rest) seen-else))))))))))
+
+
 
  
                         

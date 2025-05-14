@@ -1,8 +1,353 @@
 ;1.7 Y-combinator TLS-REC
 ;------------------------------------------------------------------------------------------------
-;Load up 1.1 and 1.3
-(load "1.3.rkt")
-(load "Project.rkt")
+;For TLS-REC we will use our inital interpetrer as well as the changes we did with 1.3 to show the power of the
+;Y-Combinator
+
+
+( define empty-env '())
+
+
+(define (extend-env name val env) 
+  (cons (list name val) env))
+
+
+(define (extend-env* names vals env)
+  (if (null? names)
+      env
+      (extend-env* (cdr names)
+                   (cdr vals)
+                   (extend-env (car names) (car vals) env))))
+
+(define(apply-env env name)
+  (cond ((null? env)
+         (error 'apply env(format "unbound identifier: ~a" name))) 
+        ((eq? name (car(car env)))
+         (cadr(car env)))
+        (else
+         (apply-env(cdr env) name))))
+
+
+(define (extend-table formals vals table)
+  (extend-env* formals vals table))
+
+
+(define 13-env
+  (extend-env* '(x y)
+               '(1 2)
+               (extend-env* '(z)
+                            '(3)
+                            empty-env)))
+
+(apply-env 13-env 'x) 
+(apply-env 13-env 'y) 
+(apply-env 13-env 'z)
+
+
+(define env1
+  (extend-env* '(a b c) '(1 2 3) empty-env))
+
+(apply-env env1 'a) 
+(apply-env env1 'b)
+(apply-env env1 'c) 
+
+
+(define env3
+  (extend-env* '(x y) '(42 43)
+    (extend-env* '(p q) '(5 6)
+      (extend-env 'r 100 empty-env))))
+
+(apply-env env3 'x) 
+(apply-env env3 'p) 
+(apply-env env3 'r) 
+
+
+(define (atom? x)
+  (and (not (pair? x)) (not (null? x))))
+
+
+(define (count-elements lst)
+  (if (null? lst)
+      0
+      (+ 1 (count-elements (cdr lst)))))
+
+
+
+(define (add1 n)
+  (+ n 1))
+
+
+
+(define (sub1 n)
+  (- n 1))
+
+
+(define first car)
+
+
+
+(define second cadr)
+
+
+
+(define third caddr)
+
+
+
+
+(define (else? x)
+  (and (atom? x) (eq? x 'else)))
+
+
+
+(define question-of first)
+
+
+
+(define answer-of second)
+
+
+
+
+(define cond-lines-of cdr)
+
+
+
+(define function-of car)
+
+
+
+(define arguments-of cdr)
+
+
+
+
+(define text-of second)
+
+
+
+(define table-of first)
+
+
+
+(define formals-of second)
+
+
+
+(define body-of third)
+
+
+(define (const-atom? a)
+  (or (number? a)
+      (eq? a #t) (eq? a #f)
+      (memq a '(cons car cdr null? eq? atom? zero? add1 sub1 number?
+                     + - * / < > <= >=))))
+
+
+
+(define (extend-table formals vals table)
+  (extend-env* formals vals table))
+
+
+(define (meaning e table)
+  ((expression-to-action e) e table))
+
+
+(define (initial-table name)
+  (error "Unbound identifier" name))
+
+
+
+
+(define (check-set list1)
+  (cond
+    ((null? list1) #t)
+    ((member (car list1) (cdr list1)) #f)
+    (else
+     (check-set (cdr list1)))))
+
+
+(define (check-equal-len-list list1 list2) 
+  (cond
+    ((and (null? list1) (null? list2)) #t)
+    ((or (null? list1) (null? list2)) #f)
+    (else
+     (check-equal-len-list (cdr list1) (cdr list2)))))
+
+
+
+(define build list)
+(define new-entry build)
+
+
+(define (primitive? fun)
+  (and (pair? fun) (eq? (first fun) 'primitive)))
+
+
+(define (non-primitive? fun)
+  (and (pair? fun) (eq? (first fun) 'non-primitive)))
+
+
+
+(define (*const e table)
+   (cond
+     ((number? e) e)
+     ((eq? e #t) #t)
+     ((eq? e #f)#f)
+     (else
+      (build 'primitive e))))
+
+
+
+(define (*quote e table)
+  (text-of e))
+
+
+
+(define (*identifier e table)
+  (apply-env table e) )     
+
+
+
+(define (*lambda e table)
+  (build 'non-primitive (cons table (cdr e)))) 
+
+
+
+(define (evcon lines table)
+  (cond
+    ((else? (question-of (car lines))) (meaning (answer-of (car lines)) table))
+    ((meaning (question-of (car lines)) table)
+     (meaning (answer-of (car lines)) table))
+    (else
+     (evcon (cdr lines) table))))
+
+
+
+
+(define (*cond e table)
+  (evcon (cond-lines-of e) table))
+
+
+
+(define (evlis args table)
+  (if (null? args)
+      '()
+      (cons (meaning (car args) table) (evlis (cdr args) table))))
+
+(define (tls-apply fun vals)
+  (cond
+    ((primitive? fun) (tls-apply-primitive (second fun) vals))
+    ((non-primitive? fun) (tls-apply-closure (second fun) vals))
+    (else
+     (error "tls-apply: not a function" fun))))
+
+
+(define (*application e table)
+  (tls-apply (meaning (function-of e) table)
+         (evlis (arguments-of e) table)))    
+
+
+(define (tls-apply-primitive name vals)
+  (cond
+    ((eq? name '+) (apply + vals))
+    ((eq? name '-) (apply - vals))           
+    ((eq? name '*) (apply * vals))          
+    ((eq? name '/) (apply / vals))           
+    ((eq? name '<) (apply < vals))           
+    ((eq? name '>) (apply > vals))           
+    ((eq? name '<=) (apply <= vals))         
+    ((eq? name '>=) (apply >= vals))        
+    ((eq? name 'cons)  (cons  (first vals) (second vals)))
+    ((eq? name 'car)   (car   (first vals)))
+    ((eq? name 'cdr)   (cdr   (first vals)))
+    ((eq? name 'null?) (null? (first vals)))
+    ((eq? name 'eq?)   (eq?   (first vals) (second vals)))
+    ((eq? name 'atom?) (atom? (first vals)))
+    ((eq? name 'zero?) (zero? (first vals)))
+    ((eq? name 'add1)  (+ (first vals) 1))
+    ((eq? name 'sub1)  (- (first vals) 1))
+    ((eq? name 'number?) (number? (first vals)))
+    (else (error "unknown primitive" name))))
+
+
+(define :atom?
+  (lambda (x)
+    (cond
+     ((atom? x) #t)
+     ((null? x) #f)
+     ((eq? (car x) 'primitive) #t)
+     ((eq? (car x) 'non-primitive) #t)
+     (else #f))))
+
+
+(define (tls-apply-closure closure vals)
+  (let*
+      ((saved (first closure))
+       (formals (second closure))
+       (body (third  closure))
+       (new-env (extend-table formals vals saved)))
+    (meaning body new-env)))
+  
+
+
+
+(define (atom-to-action e)
+  (cond
+    ((const-atom? e) *const)
+    (else *identifier)))
+
+
+
+
+
+(define (list-to-action e)
+  (cond
+    ((atom? (car e))
+     (cond
+       ((eq? (car e) 'quote)  *quote)
+       ((eq? (car e) 'lambda) *lambda)
+       ((eq? (car e) 'cond)   *cond)
+       (else *application)))
+    (else *application)))
+
+
+(define (expression-to-action e)
+  (if (atom? e)
+      (atom-to-action e)
+      (list-to-action e)))
+
+(define (set-f)
+  (begin
+    (display "Error: Not a set, duplicate elements found.")
+    (newline)
+    #f))
+
+
+
+(define (entry-f name)
+   (begin
+     (display "Error:")
+     (display name)
+     (display "not in values.")
+      (newline)#f))
+
+
+
+(define(table-f name)
+   (begin
+      (display "Error:")
+      (display name)
+      (display "Not found in the table")
+      (newline)#f))
+
+
+
+(define(eq-list-f)
+   (begin
+        (display "Error: Lists are not of equal length.")
+        (newline)
+        #f))
+
 
 ;1.7 asks to equip our TLS interperter with the Y-Combinator
 
@@ -76,8 +421,16 @@
 
 
 
-;How does Y-Combinator actually imply reccursion in english:
-
+;How does Y-Combinator actually imply reccursion informaly:
+;This section will be used to clarify our findings and deviate from mathematical terms to english since depending on who is reading our
+;project, a beginner or an expert  programmer we should hope that our findings can be comprehendable to everyone.
+;Regular reccursion is usually used in the context of a function/program calling back on the same function until it hits a potential base case
+;Such as in factorial when the  function  hits 0 it returns the value 1 to the previous call and that call multiplys that value with its current value
+; until it reaches all the way to the top value, which is like working backwords. However The Y-Combinator does an intresting metheod where
+; it doesent call on its parent function instead it constructs a function which recives itself as an argument.
+;So insted of calling the function itself over and over again the Y-combinator passes itself as a function without
+;refering to itself by name.This therfore mimics traditional reccursion because the function passing itself will always take in the result of the previous call since
+; its calling itself so the work done by the previous call will simply be passed down to itself until it reaches a base case and then will work itself back up like regualr reccursion!
 
 
 
@@ -136,6 +489,7 @@
 ; so that our f(x x ) actualy call something without the inifite process of calling themselves.
 
 
+
 ;Before integrating it into our TLS we will run some basic examples to show that our implementation
 ;works on small scale functions
 
@@ -144,7 +498,7 @@
     (lambda (n) ;the facrotial function
       (if (zero? n) ;;;;;Basic factorial logic
           1
-          (* n (self (- n 1))))))) ;Fufills y combinator by not calling itself and instead implying reccursion
+          (* n (self (- n 1))))))) ;Fufills y combinator by not calling the function itself and instead implying reccursion
 
 (define factorial (Y fact-maker))
 
