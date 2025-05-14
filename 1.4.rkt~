@@ -10,43 +10,44 @@
 ;; Provide definitions, structural insights, and use induction to justify correctness.
 
 ;----------------------------------------------------------------------------------------------------------
-;Quick Backround: Lexical Vs Dynamic Scoping
+; Quick Background: Lexical Vs Dynamic Scoping
 ;--------------------------------------------------------------------------------------------------------
 ;1.4 of the project is asking us to research closure and lexical scope and prove that our implementation
 ; of TLS implements them correctly.
 
+ 
+;The first part of the assignment is for background and asks us to research what exactly lexical scoping is
+; our findings and research of lexical scope, along the way, we decided to do a comparison between Dynamic and Lexical scoping.
 
-;The first part of the assigment is for backround and asking us to research what exactly lexical scoping is
-; our findings and research of lexical scope, along the way we decided to do a comparison between Dynamic and Lexical scoping.
 
 
-
-;Dynamic scoping is looked at like a  stack like structure where the varible pushed is whats first in the scope/ innermost function.So the most recent binding varible
-;is what is used even if the varible was defined in a diffrent scope.So the most recent varible determines the value of it at run time regardless of where
+; Dynamic scoping is looked at like a  stack-like structure where the variable pushed is what's first in the scope/ innermost function. So the most recent binding variable
+; is what is used even if the variable was defined in a different scope. So the most recent variable determines the value of it at run time, regardless of where
 ; the function was originally defined.
 
-;Lexical scoping is when we determine the varible at compile time rather thean run time. Instead of a stack the varible
-; we refer to is based on our static structure of the code.A varible is bound by the closest encolosing lambda, expression at the time the function
+
+; Lexical scoping is when we determine the variable at compile time rather than run time. Instead of a stack, the variable
+; we refer to is based on our static structure of the code. A variable is bound by the closest enclosing lambda, expression at the time the function
 ; is defined, not a the time it is called
 
-;What exactly is lexical scoping?
-;An items lexical scope is the place in which it was created.
-;Some varibles can be delacred within a specific scope and are only accesible withing that reigon.
-;Lexical Scope refers to the ability of a function scope to acess varibles from its parent scope so
-; when there is a lexical scope innermost, inner and outermost functions may access all the varibles from
-;their parent scopes all the way up to the global scope.
-;However one key detail is that a scope cannot acess varibles from functions defined inside of it,
-;so the childs function is lexically bound to the parents function.
+; What exactly is lexical scoping?
+; An item's lexical scope is the place in which it was created.
+; Some variables can be declared within a specific scope and are only accessible within that region.
+; Lexical Scope refers to the ability of a function scope to access variables from its parent scope so
+; when there is a lexical scope innermost, inner, and outermost functions may access all the variables from
+; their parent scopes all the way up to the global scope.
+; However, one key detail is that a scope cannot access variables from functions defined inside of it,
+; so the child's function is lexically bound to the parent's function.
 
 
-;Basic example to show the difference between dynamic and lexical scoping
+; Basic example to show the difference between dynamic and lexical scoping
 
 ; (define y 10)
 ; (define (h) y)
 ; (define (ad) (let ((y 20)) (h)))
 
-;In lexical scoping ad would return 10 because h was defined in an enviorment
-;In dynamic scoping it would return 20 because h is called inside of the scope of y=20.
+; In lexical scoping, ad would return 10 because h was defined in an environment
+; In dynamic scoping, ad would return 20 because h is called inside the scope of y=20.
 
 
 ;--------------------------------------------------------------------------------------------------------
@@ -54,17 +55,19 @@
 ;--------------------------------------------------------------------------------------------------------
 
 
-;Now that we've explained the key differences between lexical and dynamic scoping we are going to go more in depth in explaining lexical scope.
+; Now that we've explained the key differences between lexical and dynamic scoping, we are going to go more in-depth in explaining lexical scope.
 
-;Important defenitons:
+; Important definitions:
 
-;Bound-Occurance: a bound occurance is when a varible sits inside the scope that it introduces it in.Bound has a binding right there
-;Free occurance:  a varible that is not introduced locally and not bound by an local bindings. Free to look outside the local scope
-;Unbound occurance: a varible that is undefined. Unbound is owned by no one.
+; Bound-Occurrence: A bound occurrence is when a variable sits inside the scope that it introduces in. Bound has a binding right there
+; Free occurrence:  a variable that is not introduced locally and not bound by a local binding. Free to look outside the local scope
+; Unbound occurrence: a variable that is undefined. Unbound is owned by no one.
 
-;What is a closure?
+; What is a closure?
 
-;a closure is the run time value profuced when a function is created inside some lexical enviorment
+;a closure is the run-time value produced when a function is created inside some lexical environment
+;a closure also gives a function access to its outer scope
+
 
 
 
@@ -72,7 +75,7 @@
    ; TLS Implementation of Lexical Scope and Closures
 ; ------------------------------------------------------------------------------
 
-;A lambda expression is converted into a closure by capturing the current enviorment.
+;A lambda expression is converted into a closure by capturing the current environment.
 ;
 ;(define (*lambda e table)
  ; (build 'non-primitive (cons table (cdr e))))
@@ -92,7 +95,7 @@
 ;  (apply-env table e) )
 
 
-; These code snippits demonstrate lexical scoping:
+; These code snippets demonstrate lexical scoping:
 ; - When a lambda is created, the current table is captured into the closure.
 ; - When called, a new environment is built over the saved table.
 ; - Variable lookup always uses the environment stored in the closure.
@@ -103,30 +106,35 @@
 ; ------------------------------------------------------------------------------
 
 
-;How does our code demonstrate that it is lexically scoped?
+; How does our code demonstrate that it is lexically scoped?
 
-;From the defneition we provided above and the snipiets of code bellow is what we will use to prove that
-;our implementation of TLS implements lexical scoping.
+;From the definition we provided above, and the snippets of code below, is what we will use to prove that
+Our implementation of TLS implements lexical scoping.
 
-;Structure:
-;Creating the lambda captures the current enviorment.
-;The function applicaiton extends the captured enviorment with new bindings.
-;Evaluation used the extended enviorment via 'apply' env
+; Structure:
+; Creating the lambda captures the current environment.
+;The function application extends the captured environment with new bindings.
+; Evaluation used the extended environment via 'apply' env
 
 ;Base case:
-; when-Expression is a literal no lookup ocurs
-;When expression is a variable, it gets evaluated using apply-env which searches the stored enviorment
+; when-Expression is a literal no lookup occurs 
+; When an expression is a variable, it gets evaluated using apply-env, which searches the stored environment
 
-;Indcutive Hyptothesis: all the subexpressions respect Lexical scoping
+; Inductive Hypothesis: assume all the subexpressions respect Lexical scoping 
 
-;When evaluating the lambda body
-;- the bodu uses a closures enviorment and not the callers
-;- Any free varibles in the body refere to the bindings in the saved or above
-;Therfore all the varibles are resolved lexically based on where the function was defined in the code
-; and not when its called.
+;Inductive cases:
+; when Variable Reference (identifier e table) 
+; apply-env searches only the static environment chain (lexical scope)
+; therefore, it will maintain lexical binding
+
+; When evaluating the lambda body
+;- The body uses a closure environment and not the callers
+;- Any free variables in the body refer to the bindings in the saved or above
+; Thefefore, all the variables are resolved lexically based on where the function was defined in the code
+; and not when it's called.
 
 ;------------------------------------------------------------------------------------
-;Demonstration
+; Demonstration
 ;------------------------------------------------------------------------------------
 
 ; This function creates a closure over x:
