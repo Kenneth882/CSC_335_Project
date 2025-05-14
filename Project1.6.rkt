@@ -22,9 +22,8 @@ our only concern is recursive programming, our treatment is limited to the whys 
 Scheme features: car, cdr, cons, eq?, null?, zero?, add!, sub!, number?, and, or, quote, lambda, define, and
 cond. Indeed, our language is an idealized Scheme."
 
-TLS handles the high-level work because it does a lot; it parses the expression (hence why we have unparse and parse expressions defined).
-It then decides what kind of operator it is, by using primitive, non-primitive, etc. It creates environments and extends them.
-And it knows when call primitives or apply user functions.
+TLS handles the high-level work because it does a lot; it parses the expression It then decides what kind of operator it is,
+by using primitive, non-primitive, etc. It creates environments and extends them. And it knows when call primitives or apply user functions.
 Meanwhile R5RS, the TLS interpreter relies on it for low-level execution, like executing the operations and run the Scheme code itself. 
 
 
