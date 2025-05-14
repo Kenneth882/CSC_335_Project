@@ -39,3 +39,116 @@ given by the professor.
 ;;
 ;;
 ;;=================================================================================================================================
+
+
+
+
+
+;;=================================================================================================================================
+;Section 1.2: Give an inductive definition of the fragment of Scheme implemented by TLS.  Using this definition, write a purely functional
+;R5RS syntax checker for TLS.  While your syntax checker should not evaluate its input, it should be as complete as you can make it.
+;It should, at a minimum, (i) detect basic errors such as malformed cond and lambda expressions; (ii) detect when primitives are applied to
+;the wrong number of arguments; and (iii) detect the presence of unbound variables.
+;;=================================================================================================================================
+;;
+;;
+#|
+
+
+|#
+;;
+;;
+;;=================================================================================================================================
+
+
+
+
+
+;;=================================================================================================================================
+;Section 1.3: After giving a specification for the environment subsystem of TLS, prove that your implementation satisfies this specification.
+;Then change the representation of environments to use lists of bindings rather than the names-values pairs shown in the text, and show that
+;the altered representation both satisfies your specification and works with the rest of the interpreter.
+;;=================================================================================================================================
+;;
+;;
+#|
+
+
+|#
+;;
+;;
+;;=================================================================================================================================
+
+
+
+
+
+;;=================================================================================================================================
+;Section 1.4: Research closures and lexical scope, and prove that (your implementation of) TLS implements these correctly. Your writeup will
+;need to include enough information on closures and lexical scope to allow a meaningful correctness discussion.  Your argument will use
+;structural, as well as other inductions. 
+;;=================================================================================================================================
+;;
+;;
+#|
+
+
+|#
+;;
+;;
+;;=================================================================================================================================
+
+
+
+
+
+;;=================================================================================================================================
+;Section 1.5: After carefully identifying a standard of correctness, prove that your implementation of TLS is correct according to that
+;standard.
+;;=================================================================================================================================
+;;
+;;
+#|
+
+
+|#
+;;
+;;
+;;=================================================================================================================================
+
+
+
+
+
+;;=================================================================================================================================
+;Section 1.6: Carefully explain the dependence of TLS on the underlying R5RS of DrRacket.  Focus, in particular, on the mechanics of function
+;calling: which system does which work?
+;;=================================================================================================================================
+;;
+;;
+#|
+
+
+|#
+;;
+;;
+;;=================================================================================================================================
+
+
+
+
+
+;;=================================================================================================================================
+;Section 1.7: Drawing on Chapter 9 of The Little Schemer, equip your TLS with recursion to form TLS-REC, using the Y-combinator. Research
+;Y-combinators, and prove that the implementation you use actually implements a Y-combinator. Explain, in detail, how the Y-combinator implements
+;recursion.  Include interesting examples of recursive programs written TLS-REC. 
+;;=================================================================================================================================
+;;
+;;
+#|
+
+
+|#
+;;
+;;
+;;=================================================================================================================================
