@@ -143,15 +143,15 @@ Booleans should return themselves. Constants evaluate to themselves.
 
 
 
+
+
 #|
 So let's start off with the base step of the interpreter.
 We can say constants and symbols are the base case since they are not built from smaller TLS expression.
 While lambda, cond, and functions are built of s-expressions. 
-
-
-=============================================
-Base Cases
-=============================================
+;; ===================================================================================================================
+;; Base Cases
+;; ===================================================================================================================
 
 Base case 1: e is a constant (number, boolean),
 ;(meaning e table) → (*const e table) → returns e unchanged
@@ -164,18 +164,17 @@ Base case 2: e is a variable (symbol)
 
 
 
-===========================================
-Inductive Hypothesis
-===========================================
+;; ===================================================================================================================
+;; Inductive Hypothesis
+;; ===================================================================================================================
 ;For all S-expressions e' that are proper subcomponents of e,
 ;The evaluation function (meaning e table) works correctly on the other components
 ;In which it correctly returns the proper semantic value [e]table
 
 
-==========================================
-Inductive Cases
-==========================================
-
+;; ===================================================================================================================
+;; Inductive Cases
+;; ===================================================================================================================
 Case 3: 'e' = (quote e)
 ;Subcomponent: e (not evaluated yet, but must be syntactically valid)
 ;By IH: The interpreter correctly recognizes e as valid syntax
@@ -196,9 +195,11 @@ Case 5: (cond (qi ai) ... (else an))
 ;Returns first ai where qi evaluates to #t
 |#
 
-=============================================
+
+
+;; ===================================================================================================================
 ;  Test Cases Demonstrating Correctness
-=============================================
+;; ===================================================================================================================
 #|
 (value '5) ; => 5
 (value '(quote hello)) ; => hello
@@ -206,8 +207,10 @@ Case 5: (cond (qi ai) ... (else an))
 (value '(cond ((#f 'wrong) (else 'right)))) ; => right
 (value '((lambda (x) (add1 x)) 3)) ; => 4
 (value '(((lambda (x) (lambda (y) (cons x y))) 1) 2)) ; => (1 . 2)
-
 |#
+
+
+
 
 #|
 Now let's look at conditionals. As we know in TLS, conditionals are handled through the cond special form.
@@ -235,11 +238,12 @@ the list-to-action function. It then process the clauses correctly through evcon
 ; in both tls and R5RS the else value will be returned. When one condtion is true then it will return the the value associated with the condition
 : when both condition are false then we will return the else value. All of this holds true for TLS and R5RS. This shows that it does meet our standard of correctness.
 
-Now lets move onto the proofs
 
-=============================================
-Base Cases
-=============================================
+
+Now lets move onto the proofs
+;; ===================================================================================================================
+;; Base Cases
+;; ===================================================================================================================
 
 ;Base case 1: (cond (else e))
 ;(meaning '(cond (else e)) table) → 
@@ -255,9 +259,9 @@ Base Cases
 ;error (no else clause)
 ;Matches TLS behavior
 
-;=============================================
-;Inductive Cases
-;=============================================
+;; ===================================================================================================================
+;; Inductive Cases
+;; ===================================================================================================================
 ;Case 1:
 (cond (q1 a1) ... (else an)). 
 ;1. Evaluate q1 via (meaning q1 table)
@@ -269,6 +273,7 @@ Base Cases
 ;- Evaluates conditions in order
 ;- Returns first true branch
 ;- Handles else as catch-all
+
 
 
 
@@ -301,13 +306,11 @@ Base Cases
 
 
 
-
 #|
 Moving onto the proofs for atom
-
-;=============================================
-;Base Cases
-;=============================================
+;; ===================================================================================================================
+;; Base Cases
+;; ===================================================================================================================
 ;Base case 1: n is an integer
 ;(meaning n table) → (*const n table) → n
 ;Semantics: [n]table = n
@@ -328,5 +331,4 @@ More test cases:
 ;2. Symbols: (atom? 'x) → #t
 ;3. Pairs: (atom? '(1 2)) → #f
 ;4. Empty: (atom? '()) → #f
-
 |#
