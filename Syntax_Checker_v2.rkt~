@@ -7,7 +7,6 @@
 ;;     basic errors such as malformed cond and lambda expressions; (ii) detect when primitives are
 ;;     applied to the wrong number of arguments; and (iii) detect the presence of unbound variables.
 
-;Loading
 (load "Project.rkt") 
 
 
@@ -17,8 +16,6 @@
 ;; TLS Module Dispatch (Used by Syntax Checker)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; this is our dispatch which can be called anywhere in our syntax-checker to refer to to avoid redundency.
-;The tls-module is the function and the dispatch serves as the data value
 (define (tls-module dispatch)
   (cond
     ((eq? dispatch 'primitives)
@@ -46,13 +43,9 @@
         ((member? (car lst) (cdr lst)) #t)
         (else (duplicates? (cdr lst)))))
 
-;here we use x as our varible the env as the enviorment and the tls as our datatype lookup
-;so in this case it returns true if x is in out current lexical enviorment or built in primitive
 (define (var? x env tls)
   (or (member? x env) (member? x (tls 'primitives))))
 
-;This serves as our error function which stores the errors in our syntax, lst is the expressions needing to be checked
-;env is the enviorment and the tls is out module refered to. We use this to recursivly check all our sub-expressions
 (define (gathers errs lst env tls)
   (cond ((null? lst) errs)
         (else (let ((result (syntax-checker (car lst) env tls)))
@@ -64,13 +57,6 @@
 ;; Main Syntax Checker
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;Our main function syntax-checker consists of of the expr which is our current value,
-;the enviorment and module dispatch
-
-;How does this work??
-;This is mainly used to check if an epxr is valid under TLS rules and simply retuns a #t or a #f based on it.
-;at first it simply checks the constants and varibles and then if the expr is a special form it is in charge of
-;sending that expr into its check function which then checks if that special form is valid.
 (define (syntax-checker expr env tls)
   (cond
     ((constant? expr) #t)
@@ -95,7 +81,6 @@
 ;; Arity Checking
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;Simple checker for condtions and correct Arity.
 (define (conditions name vals)
   (cond
     ((or (eq? name 'car) (eq? name 'cdr) (eq? name 'first)
@@ -115,23 +100,12 @@
 ;; Form Checkers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;This is based around the strcuture of (if test then else): so we need len 4.
-;we test that all the parts  follow the Tls syntax so that an if without an else would be unvalid
-; or a if with too many parts would also be unvalid, so our if has to fufill the requirments
-
 (define (check-if expr env tls)
   (and (= (length expr) 4)
        (syntax-checker (second expr) env tls)
        (syntax-checker (third expr) env tls)
-       (syntax-checker (cadddr expr) env tls)))
+       (syntax-checker (fourth expr) env tls)))
 
-;(syntax-checker '(if (> x 0) 1 2) '(x) tls)   ; → #t
-;(syntax-checker '(if x 1) '(x) tls)           ; → #f (missing else)
-;(syntax-checker '(if x 1 2 3) '(x) tls)       ; → #f (too many parts)
-
-
-;This function checks for define: We ensure that our "x" value has to be a symbol and that our parameters
-;have to be unique
 (define (check-define expr env tls)
   (cond
     ((symbol? (second expr))
@@ -145,9 +119,6 @@
             (syntax-checker body new-env tls))))
     (else #f)))
 
-;Checks for lambda where the form must be in (lambda(parameters) body) hence the length 3
-; we ensure that our parameters must be a list of symbols, and that we have no duplicates as well as
-;our body being valid an enviorment extendned with those parameters
 (define (check-lambda expr env tls)
   (and (= (length expr) 3)
        (let ((params (second expr))
@@ -156,12 +127,6 @@
               (not (duplicates? params))
               (syntax-checker body (append params env) tls)))))
 
-;(syntax-checker '(lambda (x) (+ x 1)) '() tls)         ; → #t
-;(syntax-checker '(lambda (x x) (+ x 1)) '() tls)       ; → #f
-;(syntax-checker '(lambda x (+ x 1)) '() tls)           ; → #f (params not a list)
-
-;This is our check-cond: in each call we test that each clause MUST be a list
-; and that the last and only last part has to  be an else
 (define (check-cond expr env tls)
   (define (clause-check lst)
     (cond
@@ -179,18 +144,9 @@
        (> (length expr) 1)
        (clause-check (cdr expr))))
 
-;Test these Bellow after tls-module Defenition!
-
-;(syntax-checker '(cond ((> x 0) 'pos) (else 'zero)) '(x) tls) ; → #t
-;(syntax-checker '(cond ((> x 0)) (else 'ok)) '(x) tls)        ; → #f (missing result)
-;(syntax-checker '(cond ((> x 0) 1) ((< x 0) 2) (else)) '(x) tls) ; → #f (empty else)
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Free Variable Detection
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 
 (define (element-lst? x lst)
   (cond ((null? lst) #f)
@@ -238,7 +194,3 @@
 (syntax-checker '(lambda (x) (+ x 1)) '() tls) ; => #t
 (syntax-checker '(+ 1) '() tls)               ; => #f
 (unbound-vars '(lambda (x) (lambda (y) (+ x y z)))) ; => (z)
-
-(syntax-checker '(cond ((> x 0) 'pos) (else 'zero)) '(x) tls) ; → #t
-(syntax-checker '(cond ((> x 0)) (else 'ok)) '(x) tls)        ; → #f (missing result)
-(syntax-checker '(cond ((> x 0) 1) ((< x 0) 2) (else)) '(x) tls) ; → #f (empty else)
