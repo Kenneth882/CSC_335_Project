@@ -19,10 +19,19 @@
 So let's start with focusing on DrRacket for a bit. This is what we use to implement Scheme, EOPL, and other
 different languages. The TLS Interpreter is written in Scheme. And in "The Little Schemer" it says that:
 
+
 "It is our belief that writing programs recursively in Scheme is essentially simple pattern recognition. Since
 our only concern is recursive programming, our treatment is limited to the whys and wherefores of just a few
 Scheme features: car, cdr, cons, eq?, null?, zero?, add!, sub!, number?, and, or, quote, lambda, define, and
 cond. Indeed, our language is an idealized Scheme."
+
+
+TLS is built with the R5RS Scheme and it relies on it. The way it depends on it is by the operations and functions mainly.
+For the functions, by using expression-to-action, we can determine if its a primitive or user defined lambda function. If it is
+a primitive, then TLS handled the work by extending the environment and evaluating the body. But if it is a primitive, then it calls
+the R5RS primitive. And now for the primitives, TLS relies on R5RS for the execution of them. The example Alexis gave with the exam
+and brain is great. It's below.
+
 
 TLS handles the high-level work because it does a lot; it parses the expression, meaning it takes the raw input and
 then breaks it down into structural parts. Looking for parameters, functions, and arguments. It then decides what kind of
