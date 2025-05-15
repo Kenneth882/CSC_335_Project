@@ -14,21 +14,7 @@
 ; In class, we went over the specifications of a "Module Dispatch" and how it should work in the TLS system with the syntax checker
 ; this will serve as our dispatch where we 
 ; In class, we also learned how s-expression can be more than what is shown in "Almost TLS" so we will have to account for that as well.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; TLS Module Dispatch (Used by Syntax Checker)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; this is our dispatch which can be called anywhere in our syntax-checker to refer to, to avoid redundancy.
-;The tls-module is the function and the dispatch serves as the data value
-(define (tls-module dispatch)
-  (cond
-    ((eq? dispatch 'primitives)
-     '(car cdr cons null? pair? list? equal? atom? not
-           + - * / = < > <= >= symbol? number? boolean?
-           procedure? zero? add1 sub1 first second third))
-    ((eq? dispatch 'special-forms)
-     '(lambda cond if quote and or))
-    (else (error "Unknown dispatch key:" dispatch))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helpers
