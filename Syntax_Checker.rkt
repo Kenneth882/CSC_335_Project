@@ -27,7 +27,7 @@
            + - * / = < > <= >= symbol? number? boolean?
            procedure? zero? add1 sub1 first second third))
     ((eq? dispatch 'special-forms)
-     '(lambda cond if quote define and or))
+     '(lambda cond if quote and or))
     (else (error "Unknown dispatch key:" dispatch))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -85,7 +85,6 @@
          ((eq? op 'lambda) (check-lambda expr env tls))
          ((eq? op 'cond)   (check-cond expr env tls))
          ((eq? op 'if)     (check-if expr env tls))
-         ((eq? op 'define) (check-define expr env tls))
          ((member? op (tls 'primitives))
           (and (conditions op args)
                (null? (gathers '() args env tls))))
@@ -134,18 +133,6 @@
 ; This function checks for define: We ensure that our "x" value has to be a symbol and that our parameters
 ; have to be unique
 
-(define (check-define expr env tls)
-  (cond
-    ((symbol? (second expr))
-     (and (= (length expr) 3)
-          (syntax-checker (third expr) env tls)))
-    ((and (pair? (second expr)) (symbol? (car (second expr))))
-     (let* ((params (cdr (second expr)))
-            (body (third expr))
-            (new-env (append params env)))
-       (and (not (duplicates? params))
-            (syntax-checker body new-env tls))))
-    (else #f)))
 
 ;Checks for lambda where the form must be in (lambda(parameters) body) hence the length 3
 ; we ensure that our parameters must be a list of symbols, and that we have no duplicates as well as
