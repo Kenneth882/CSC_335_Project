@@ -80,6 +80,9 @@ expression-to-action, list-to-action, and atom-to-action. The sixth and last sec
 ;;
 #|
 
+We did this by creating the functions extend-env,extend-env* and apply-env which were used as a way to create a binding system. In order to verify
+that it was compatible with the interpreter we used our original 1.1 TLS interpreter and then we changed the original environment to the new one giving
+us a fully working interpreter with a binding system
 
 |#
 ;;
@@ -103,6 +106,9 @@ Because this was a fairly complex section of the project, it did require a lot o
 work for this section and to better organize it, he added his notes on a Google Doc which is linked below. This doc will also be submitted for interview 2
 and for the final project as well. 
 https://docs.google.com/document/d/1CKyYgchK5oChhL6ZRU6buQEhEG78gxKq_Pgxfek-oX8/edit?usp=sharing
+
+In 1.4 we were asked to talk about lexical scoping and closures. At first we did research on Dynamic Vs lexical scoping to figure out the differences between
+the two. After our findings we proved that our Current Tls interpreter was lexically scoped and we used a structural induction to prove that.
 
 |#
 ;;
@@ -287,6 +293,8 @@ Meanwhile, R5RS is responsible for
 ;;
 #|
 
+IN 1.7, Y combinator, after researching lambda calculus we dived into figuring out how Y combinator would work in Scheme. Doing this we found out various
+examples like factorial and length which could be found using the Y-combinator.
 
 |#
 ;;
