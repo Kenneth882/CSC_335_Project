@@ -26,21 +26,45 @@ Scheme features: car, cdr, cons, eq?, null?, zero?, add!, sub!, number?, and, or
 cond. Indeed, our language is an idealized Scheme."
 
 
-TLS is built with the R5RS Scheme and it relies on it. The way it depends on it is by the operations and functions mainly.
-For the functions, by using expression-to-action, we can determine if its a primitive or user defined lambda function. If it is
-a primitive, then TLS handled the work by extending the environment and evaluating the body. But if it is a primitive, then it calls
-the R5RS primitive. And now for the primitives, TLS relies on R5RS for the execution of them. The example Alexis gave with the exam
-and brain is great. It's below.
+TLS is built using R5RS Scheme and relies on it for executing operations and functions. When evaluating a function, TLS uses
+expression-to-action to determine whether the function is a primitive or a user defined lambda. If the function is a user defined lambda,
+TLS constructs a closure, extends the environment with the correct bindings, and evaluates the body within that environment. If the function
+is a primitive, TLS does not perform the computation itself. It actually "sends it" to R5RS host system. In this way, TLS handles the logic and
+structural evaluation, while R5RS performs the computations for primitives.
 
 
+
+;;============================================================================================================
+;; WHAT TLS DOES BELOW
+;;============================================================================================================
 TLS handles the high-level work because it does a lot; it parses the expression, meaning it takes the raw input and
 then breaks it down into structural parts. Looking for parameters, functions, and arguments. It then decides what kind of
 operator it is, by expression-to-action. It can also use list-to-action, atom-to-action. But more commonly it uses expression.
-It creates environments and extends them. And it knows when to call primitives or apply user functions. Meanwhile R5RS, the TLS
-interpreter relies on it for low-level execution, like executing the operations and run the Scheme code itself.
-TLS fully controls the high level things such as breaking down expressions, creating and applying closures, building and extending
-environments, and determining when and where a primitive needs to be applied. However, whenever a primitive operation is met,
-TLS calls into the Scheme system to perform the actual low level computation.
+It creates environments and extends them. And it knows when to call primitives or apply user functions. TLS does not compute
+actual results for primitive operations it gives them to R5RS.
+#|
+Based on our interpreter, what TLS is responsible for is
+- Making closures for lambda expressions via tls-apply-closure
+- How environments and closures are managed via extend-table and lookup-in-table
+- Function applications
+- Expression Dispatching (expression-to-action is a good example)
+- Parsing expressions also using expression-to-action
+- Recognizing lambdas and applying them. 
+|#
+
+
+;;============================================================================================================
+;; WHAT R5RS DOES BELOW
+;;============================================================================================================
+Meanwhile R5RS, the TLS interpreter relies on it for low-level execution, like executing the operations and run the Scheme code itself.
+TLS fully controls high level tasks such as breaking down expressions, managing closures, building environments, and determining when to
+call a primitive. However, whenever a primitive operation is met, TLS calls into the Scheme system. So this actually performs the computation.
+#|
+- Executing built-in operations: car, cdr, cons, null?, eq?, etc etc
+- Evaluating Scheme-level primitives inside tls-apply-primitive
+- Performing the computations
+- Supporting predicate checks because in our interpreter we often use number? and this is a prime example
+|#
 
 
 Focusing on the operations above, let's primarily focus on car, cdr, and cons as a working example. What TLS does is that
@@ -55,17 +79,22 @@ What R5RS does here it that it actualy implements the primitives car, cdr, cons,
 hand relationship.
 (value '(car '(a b c d e f))). If we were to run this example using the TLS interpreter, it would recognize that car is a primitive
 and then R5RS would do the actual work and return 'a' (not actually return in quotes but just a).
+
 (value '(car '(a b c d e f)))        ;returns a
 (value '(cdr '(a b c d e f)))        ;returns (b c d e f)
 (value '(cons '(1 2 3) '(a b c)))    ;returns ((1 2 3) a b c)
 
 
 R5RS steps in only when primitives like car, cdr, cons, etc. That’s when the host language takes over. Meanwhile TLS is doing
-everything else, focusing on apply-closure and enviornment tracking. A real world example would be like a person taking an exam.
-We use our hands to write down our code (R5RS), meanwhile our brain (TLS) does all the heavy lifting—deciding what to do, in what
-order, and how to apply rules. TLS evaluates structure, builds closures, and interprets meaning. R5RS just follows those instructions
-and handles the low-level operations like +, car, cons, etc.
+everything else, focusing on tls-apply-closure and  managing how functions are evaluated in the correct environment. A real world example
+would be like a person taking an exam. We use our hands to write down our code (R5RS), meanwhile our brain (TLS) does all the heavy
+lifting deciding what to do, in what order, and how to apply rules. TLS evaluates structure, builds closures, and interprets meaning.
+R5RS just follows those instructions and handles the low-level operations like +, car, cons, etc.
 |#
+
+
+
+
 
 
 
@@ -83,7 +112,7 @@ in the interpreter, it builds a closure. A closure is a data structure and it ha
     (meaning body new-env)))
 
 Now this is the apply-closure function function in TLS, we called it tls-apply-function. So what this does is that it extracts the closure elements,
-the saved environment, the formal parameters, and the body. And then it makes a new environment by extending the environment and helps bound everything
+the saved environment, the formal parameters, and the body. And then it makes a new environment by extending the environment and helps bind everything
 correctly here. After that, an important line is (meaning body new-env). This is where TLS actually evaluates the function body in the updated environment.
 On a more broad and general breakdown, lets say that the function is a user defined lambda, then the interpreter uses its own rules and environment. If the
 function is just a primitive, then the interpreter calls the R5RS primitive. If it is neither, we will likely get an error message.
@@ -93,17 +122,17 @@ function is just a primitive, then the interpreter calls the R5RS primitive. If 
 Now for a few examples of this, I'll cover examples with regular operators like +, *. And then TLS built in car, cdr, cons.
 And then TLS not built it, like append, reverse.
 1) (value '((lambda (x) (+ x 1)) 2)) 
-; The first step would be that TLS creates a closure, so (non-primitive current-env (x (+ x 1)))
+; The first step would be that TLS recognizes the lambda and constructs a closure thus (non-primitive saved-env (x (+ x 1)))
 ; The second step is to extend the environment with x=2
-; The third step is to evaluate `(+ x 1)` in the new environment
-; The fourth step is to compute the actual `+` operation.
+; The third step is to evaluate (+ x 1) in the new environment
+; The fourth step is to compute the actual + operation.
 ; Final answer is 3.
 
 
 2) (value '((lambda (x) (cons x '(1 2 3))) 'a))
-; The first step is to create a closure, so (non-primitive () (x) ((cons x '(1 2 3))))
+; The first step would be that TLS recognizes the lambda and constructs a closure thus  (non-primitive () (x) ((cons x '(1 2 3))))
 ; The second step is to extend the environment, so x= 'a
-; The third step is to evaulate and use the cons;
+; The third step is to evaluate (cons x '(1 2 3)) using apply-primitive. TLS recognizes cons as a primitive and R5RS performs the actual cons operation
 ; Final answer is (a 1 2 3)
 
 
