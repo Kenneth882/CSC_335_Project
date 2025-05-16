@@ -13,6 +13,8 @@
 ;this will serve as out dispatch where we 
 
 
+;change this to the 1.1 file name
+(load "Choudhury.Juarez.Romero.1.1.scm")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -74,15 +76,14 @@
          ;lambda-arity checker, first it checks above if the lambda is valid
           ;then it checks out if ate arguments have the correct value
           ;then we just ask if the arguments are valid expressions
-          (and (check-lambda op env tls)                 
-               (= (length args) (length (second op)))    
-               (null? (gathers '() args env tls))))      
+          (and (check-lambda op env tls)
+               (= (length args) (length (second op)))
+               (null? (gathers '() args env tls))))
          ((member? op (tls 'primitives))
           (and (conditions op args)
                (null? (gathers '() args env tls))))
          (else (null? (gathers '() expr env tls))))))
     (else #f)))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Arity Checking
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -153,7 +154,7 @@
   (define (clause-check lst)
     (cond
       ((null? lst) #t)
-      ((not (pair? (car lst))) #f)
+      ((not (list? (car lst))) #f)
       ((eq? (car (car lst)) 'else)
        (and (null? (cdr lst)) 
             (null? (gathers '() (cdr (car lst)) env tls))))
@@ -178,18 +179,29 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-
+; This function checks whether a given element x appears in the list last.
+;; If the list is empty, then x is not found.
+; we keep on doing this until x is found or not found.
 (define (element-lst? x lst)
   (cond ((null? lst) #f)
         ((equal? x (car lst)) #t)
         (else (element-lst? x (cdr lst)))))
 
+; This function returns the union of two lists, preserving order and avoiding duplicates.
+; How it works:
+; If the first list is empty, the union is simply the second list.
+; If the first element of lst1 already appears in lst2, skip it and continue.
+; Otherwise, include the first element of lst1 in the result and continue.
 (define (union-lst lst1 lst2)
   (cond ((null? lst1) lst2)
         ((element-lst? (car lst1) lst2) (union-lst (cdr lst1) lst2))
         (else (cons (car lst1) (union-lst (cdr lst1) lst2)))))
 
-(define (free-vars expr bound)
+
+;unbound-vars* takes two arguments—an expression and a list of names that are already considered
+;bound—and returns a list of all symbols in the expression that do not appear in that bound list. It
+;proceeds by examining the expression’s structure
+(define (unbound-vars* expr bound)
   (cond
     ((symbol? expr)
      (if (element-lst? expr bound) '() (list expr)))
@@ -197,24 +209,24 @@
     ((and (pair? expr) (eq? (car expr) 'lambda))
      (let ((params (second expr))
            (body (third expr)))
-       (free-vars body (append params bound))))
+       (unbound-vars* body (append params bound))))
     ((and (pair? expr) (eq? (car expr) 'cond))
      (apply union-lst (map (lambda (clause)
                              (union-lst
-                              (free-vars (car clause) bound)
+                              (unbound-vars* (car clause) bound)
                               (apply union-lst
                                      (map (lambda (x)
-                                            (free-vars x bound))
+                                            (unbound-vars* x bound))
                                           (cdr clause)))))
                            (cdr expr))))
     ((pair? expr)
-     (union-lst (free-vars (car expr) bound)
-                (free-vars (cdr expr) bound)))
+     (union-lst (unbound-vars* (car expr) bound)
+                (unbound-vars* (cdr expr) bound)))
     ((null? expr) '())
     (else '())))
 
 (define (unbound-vars expr)
-  (free-vars expr '()))
+  (unbound-vars* expr '()))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -238,3 +250,19 @@
 
 (define lam‐nested‐ok '(((lambda (p) (lambda (q) (+ p q))) 1) 2))
 (syntax-checker lam‐nested‐ok '() tls) 
+
+(syntax-checker '((lambda (x) (if x 1 2)) #t) '() tls) ; → #t
+(syntax-checker '(cond ((= x 0) 0) ((> x 0) 1) (else -1)) '(x) tls) ; → #t
+
+; Invalid nested
+(syntax-checker '((lambda (x) (if x 1)) #t) '() tls)    ; → #f (missing else)
+(syntax-checker '(cond ((= x 0)) ((> x 0) 1) (else -1)) '(x) tls) ; → #f (missing result)
+
+; Empty lists
+(syntax-checker '() '() tls)                    ; → #f (invalid expr)
+(syntax-checker '(()) '() tls)                  ; → #f (invalid expr)
+
+; Malformed special forms
+(syntax-checker '(lambda) '() tls)              ; → #f (malformed)
+(syntax-checker '(if) '() tls)                  ; → #f (malformed)
+(syntax-checker '(cond) '() tls)                ; → #f (malformed)
