@@ -1,5 +1,3 @@
-;1.7 Y-combinator TLS-REC
-;------------------------------------------------------------------------------------------------
 
 
 
@@ -52,7 +50,7 @@
 ;In reality this is simple, we just treat the parameter like an normal input
 ; giving us
 ;λx.(λx.xx)(λx.xx)
-; this process would keep repeating until we reach a stopping condition, so thats the basics of a loop in lambda calcus!
+; this process would keep repeating until we reach a stopping condition, so thats the basics of a loop in lambda calculus!
 ; its a function that takes itself as an input how many times are needed.
 
 ;after figuring out the looping aspect of lambda-calculus, the y-combinator operation is not much diffrent
@@ -68,12 +66,27 @@
 ;so given the defention Y we want to show that Y(F)= F(Y F)
 
 ;all we really have to  do is expand Y
-;so given the defenition  Y=≈(λx.f(xx))(λx.f(xx))F
+;so given the defenition  Y==(λx.f(xx))(λx.f(xx))F
 ;once we subsititue we get (λx. F (x x)) (λx. F (x x))
 ;then this implies F ((λx. F (x x)) (λx. F (x x)))
 ; so after plugging in we got back to where we started so it shows that Y F= F( Y F)
 
-;Formal proof:LATER
+
+
+;How does Y-Combinator actually imply reccursion informaly:
+;This section will be used to clarify our findings and deviate from mathematical terms to english since depending on who is reading our
+;project, a beginner or an expert  programmer we should hope that our findings can be comprehendable to everyone.
+;Regular reccursion is usually used in the context of a function/program calling back on the same function until it hits a potential base case
+;Such as in factorial when the  function  hits 0 it returns the value 1 to the previous call and that call multiplies that value with its current value
+; until it reaches all the way to the top value, which is like working backwords. However The Y-Combinator does an intresting metheod where
+; it doesent call on its parent function instead it constructs a function which recives itself as an argument.
+;So insted of calling the function itself over and over again the Y-combinator passes itself as a function without
+;refering to itself by name.This therfore mimics traditional reccursion because the function passing itself will always take in the result of the previous call since
+; its calling itself so the work done by the previous call will simply be passed down to itself until it reaches a base case and then will work itself back up like regualr reccursion!
+
+
+
+
 
 ;okay now after defining the defention and proving the code, how would we implement the Y-Combinator in TLS
 ;Before diving into the design idea, when we were first focusing on translating we ran into some issues
@@ -91,8 +104,8 @@
 ;if that direct translation is good, then what is the problem?
 
 ;This took some research and what we found is that it has to do with schemes evaluation
-;In our case ( f(x x)) is evaluated imediatlly meaning that we call the parameter into the function, but it keeps calling itself an infinite amount of times
-;due to it being a value and fufilling the closure properties. So we keep calling ( f(xx)) (f(x x)) an infinite amunt of times without f actually being executed
+;In our case ( f(x x)) is evaluated instantly  meaning that we call the parameter into the function, but it keeps calling itself an infinite amount of times
+;due to it being a value and fufilling the closure properties. So we keep calling ( f(xx)) (f(x x)) an infinite amount of times without f actually being executed
 ;so it keeps calling but with no result.
 
 ; to correct this we created a sepreate function with similar properties but with the edge case of infinite looping covered
@@ -128,6 +141,7 @@
 ; so that our f(x x ) actualy call something without the inifite process of calling themselves.
 
 
+
 ;Before integrating it into our TLS we will run some basic examples to show that our implementation
 ;works on small scale functions
 
@@ -136,12 +150,12 @@
     (lambda (n) ;the facrotial function
       (if (zero? n) ;;;;;Basic factorial logic
           1
-          (* n (self (- n 1))))))) ;Fufills y combinator by not calling itself and instead implying reccursion
+          (* n (self (- n 1))))))) ;Fufills y combinator by not calling the function itself and instead implying reccursion
 
 (define factorial (Y fact-maker))
 
 (factorial 0)  ; ⇒ 1
-(factorial 5)  ; ⇒ 120
+(factorial 5)  ; ⇒ 120   
 (factorial 10) ; ⇒ 3628800
 
 ( define sum-maker
@@ -152,7 +166,7 @@
          (else
           (+ n( self( - n 1)))))))) ;remeber to always refer to self, function is just there to be named
 
-(define sumation( Y sum-maker)) ;this would make the function so Y would swallow sum-maker
+(define sumation( Y sum-maker)) 
 
 (sumation 5)
 (sumation 0)
@@ -171,131 +185,3 @@
 (define list-len( Y len-list))
 
 (list-len '( 1 2 3 4 ))
-
-
-;Okay now that we got all the defention stuff out of the way, how can this useful feature be integreated into our TLS??
-;So if we refer back to 1.3, we changed the enviorment so we can simply build on top of it.
-; we also have to refer to our meaning function since,
-
-;TLS_REC_IMPLEMENTATION
-
-
-
-
-(define initial-env 
-  (extend-env  
-   'Y
-   (meaning
-     '(lambda (f)
-        ((lambda (x) (f (lambda (v) ((x x) v))))
-         (lambda (x) (f (lambda (v) ((x x) v))))))
-     empty-env)
-   empty-env))
-
-
-
-; we also have to change our value function from
-;(define (value e)
-  ;(meaning e '()))  to something that will accept the Y-combinator
-
-;since we already defined our inital-env we can simply pass it to value
-
-(define (value e)
-  (meaning e initial-env))
-
-;TESTS
-;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-;test cases from professor. these were posted on MS Teams.
-(value '((lambda (x) (add1 x)) 3))
-;this returns 4
-
-
-(value '((lambda (x) (add1 x))
-	 ((lambda (x) (add1 x)) 4)))
-;this returns 6
-
-
-(value '(((lambda (y)
-            (lambda (x) (cons x y)))
-          3)
-         4))
-;this returns (4 . 3)
-
-
-(value '((lambda (x z)
-           (cons x
-                 ((lambda (x y) (cons z x))
-                  3 4)
-                 ))
-         1 2))
-;this returns (1 2 . 3)
-
-
-(value '((lambda (f y)
-          (f y))
-        (lambda (x) (add1 x))
-        4))
-;this returns 5
-
-
-(value '((lambda (f y)
-	   (f y))
-	 ((lambda (x) (cond ((number? x) add1)
-			    (else (lambda (y) (cons x y)))))
-	  (quote z))
-	 3))
-;this returns (z . 3)
-
-
-(value '((lambda (x)
-             ((lambda (f)
-                (cons x ((lambda (x) (f x))
-                         3)))
-              (lambda (y) (cons x y))))
-         2))
-;this returns (2 2 . 3)  
-
-
-
- (value
- '((Y (lambda (sum)
-        (lambda (n)
-          (cond ((zero? n) 0)
-                (else (+ n (sum (sub1 n))))))))
-   4))
-
-;->> returns 10
-
-(value
- '((Y (lambda (fact)
-        (lambda (n)
-          (cond
-            ((zero? n) 1)
-            (else (* n (fact (sub1 n))))))))
-   4))
-;; Expected output: 24
-
-(value
- '((Y (lambda (len)
-        (lambda (xs)
-          (cond
-            ((null? xs) 0)
-            (else (add1 (len (cdr xs))))))))
-   (quote (a b c d))))
-;; Expected output: 4
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-;-------------------------------------------------------------------------------------------------

@@ -8,26 +8,12 @@
 ;;     applied to the wrong number of arguments; and (iii) detect the presence of unbound variables.
 
 ;Loading
-(load "Project.rkt") 
-
 
 ;In class we went over the specifications of a "Module Dispatch" and how it should work in the TLS system with the syntax checker
 ;this will serve as out dispatch where we 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; TLS Module Dispatch (Used by Syntax Checker)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; this is our dispatch which can be called anywhere in our syntax-checker to refer to to avoid redundency.
-;The tls-module is the function and the dispatch serves as the data value
-(define (tls-module dispatch)
-  (cond
-    ((eq? dispatch 'primitives)
-     '(car cdr cons null? pair? list? equal? atom? not
-           + - * / = < > <= >= symbol? number? boolean?
-           procedure? zero? add1 sub1 first second third))
-    ((eq? dispatch 'special-forms)
-     '(lambda cond if quote define and or))
-    (else (error "Unknown dispatch key:" dispatch))))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helpers
@@ -78,13 +64,19 @@
     ((and (pair? expr) (eq? (car expr) 'quote))
      (and (= (length expr) 2) #t))
     ((pair? expr)
-     (let ((op (car expr))
+     (let ((op (car expr)) 
            (args (cdr expr)))
        (cond
          ((eq? op 'lambda) (check-lambda expr env tls))
          ((eq? op 'cond)   (check-cond expr env tls))
          ((eq? op 'if)     (check-if expr env tls))
-         ((eq? op 'define) (check-define expr env tls))
+         ((and (pair? op) (eq? (car op) 'lambda))
+         ;lambda-arity checker, first it checks above if the lambda is valid
+          ;then it checks out if ate arguments have the correct value
+          ;then we just ask if the arguments are valid expressions
+          (and (check-lambda op env tls)                 
+               (= (length args) (length (second op)))    
+               (null? (gathers '() args env tls))))      
          ((member? op (tls 'primitives))
           (and (conditions op args)
                (null? (gathers '() args env tls))))
@@ -111,6 +103,10 @@
      (>= (length vals) 2))
     (else #f)))
 
+
+;; Check if lambda expression is well-formed
+    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Form Checkers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -130,31 +126,22 @@
 ;(syntax-checker '(if x 1 2 3) '(x) tls)       ; → #f (too many parts)
 
 
-;This function checks for define: We ensure that our "x" value has to be a symbol and that our parameters
-;have to be unique
-(define (check-define expr env tls)
-  (cond
-    ((symbol? (second expr))
-     (and (= (length expr) 3)
-          (syntax-checker (third expr) env tls)))
-    ((and (pair? (second expr)) (symbol? (car (second expr))))
-     (let* ((params (cdr (second expr)))
-            (body (third expr))
-            (new-env (append params env)))
-       (and (not (duplicates? params))
-            (syntax-checker body new-env tls))))
-    (else #f)))
-
 ;Checks for lambda where the form must be in (lambda(parameters) body) hence the length 3
 ; we ensure that our parameters must be a list of symbols, and that we have no duplicates as well as
 ;our body being valid an enviorment extendned with those parameters
 (define (check-lambda expr env tls)
-  (and (= (length expr) 3)
-       (let ((params (second expr))
-             (body (third expr)))
-         (and (list? params)
-              (not (duplicates? params))
-              (syntax-checker body (append params env) tls)))))
+  (cond
+    ((not (= (length expr) 3)) 
+     #f)
+    ((not (list? (second expr))) 
+     #f)
+    ((duplicates? (second expr)) 
+     #f)
+    (else
+     (let* ((params (second expr))
+            (body   (third expr))
+            (new-env (append params env))) 
+       (syntax-checker body new-env tls)))))
 
 ;(syntax-checker '(lambda (x) (+ x 1)) '() tls)         ; → #t
 ;(syntax-checker '(lambda (x x) (+ x 1)) '() tls)       ; → #f
@@ -175,7 +162,7 @@
        (and (syntax-checker (caar lst) env tls)
             (null? (gathers '() (cdr (car lst)) env tls))
             (clause-check (cdr lst))))))
-  (and (pair? expr)
+  (and (list? expr)
        (> (length expr) 1)
        (clause-check (cdr expr))))
 
@@ -233,12 +220,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Example Tests
 
-(define tls tls-module)
 
-(syntax-checker '(lambda (x) (+ x 1)) '() tls) ; => #t
+
+(syntax-checker '(lambda (x) (+ x 1) ) '() tls) ; => #t
 (syntax-checker '(+ 1) '() tls)               ; => #f
 (unbound-vars '(lambda (x) (lambda (y) (+ x y z)))) ; => (z)
 
 (syntax-checker '(cond ((> x 0) 'pos) (else 'zero)) '(x) tls) ; → #t
 (syntax-checker '(cond ((> x 0)) (else 'ok)) '(x) tls)        ; → #f (missing result)
 (syntax-checker '(cond ((> x 0) 1) ((< x 0) 2) (else)) '(x) tls) ; → #f (empty else)
+
+(define lam‐too‐few '((lambda (a b) (+ a b)) 7))
+(syntax-checker lam‐too‐few '() tls)
+
+(define lam‐ok '((lambda (a b) (+ a b)) 7 8))
+(syntax-checker lam‐ok '() tls)
+
+(define lam‐nested‐ok '(((lambda (p) (lambda (q) (+ p q))) 1) 2))
+(syntax-checker lam‐nested‐ok '() tls) 

@@ -247,7 +247,7 @@
 
 
 
-
+(load "Syntax_Checker_v2.rkt")
 
 
 
@@ -1028,9 +1028,23 @@ Hence, closures are applied correctly.
         #f))
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; TLS Module Dispatch (Used by Syntax Checker)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+; this is our dispatch which can be called anywhere in our syntax-checker to refer to, to avoid redundancy.
+;The tls-module is the function and the dispatch serves as the data value
+(define (tls-module dispatch)
+  (cond
+    ((eq? dispatch 'primitives)
+     '(car cdr cons null? pair? list? equal? atom? not
+           + - * / = < > <= >= symbol? number? boolean?
+           procedure? zero? add1 sub1 first second third))
+    ((eq? dispatch 'special-forms)
+     '(lambda cond if quote and or))
+    (else (error "Unknown dispatch key:" dispatch))))
 
-
+(define tls tls-module)
 
 
 
