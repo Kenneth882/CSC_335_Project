@@ -772,7 +772,7 @@
     ((eq? dispatch 'special-forms)
      '(lambda cond if quote and or))
     (else (error "Unknown dispatch key:" dispatch))))
-
+(define tls tls-module)
 
 
 ;===========================================================================================================
